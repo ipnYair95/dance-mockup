@@ -1,29 +1,83 @@
-import { Settings, Download, Upload } from 'lucide-react';
+import { Settings, Download, Upload, HardDrive } from 'lucide-react';
 import { useDanceState } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
+import { useAutoSave } from './hooks/useAutoSave';
 import { Sidebar } from './components/Sidebar';
 import { Stage } from './components/Stage';
 import { Timeline } from './components/Timeline';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import './App.css';
+
+const SAVE_STATUS_LABELS: Record<string, string> = {
+  'idle': '',
+  'saving': 'Saving…',
+  'saved': 'Saved',
+  'no-file': '',
+  'unsupported': 'Not supported',
+};
+
+const SAVE_STATUS_COLORS: Record<string, string> = {
+  'saving': 'var(--text-muted)',
+  'saved': '#4CAF50',
+  'unsupported': '#f44336',
+};
 
 function App() {
   const danceState = useDanceState();
   const audio = useAudio();
   const projectInputRef = useRef<HTMLInputElement>(null);
+  const [projectName, setProjectName] = useState('Untitled Dance');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  // Memoize data so useAutoSave can do a stable reference comparison
+  const projectData = useMemo(() => ({
+    dancers: danceState.dancers,
+    formations: danceState.formations,
+  }), [danceState.dancers, danceState.formations]);
+
+  const { pickSaveFile, loadFromLocalStorage, saveStatus, mode, hasFileSystemAPI } = useAutoSave(projectData);
+
+  // On first load, offer to restore from localStorage if data exists
+  useEffect(() => {
+    const saved = loadFromLocalStorage();
+    if (saved?.dancers?.length && saved?.formations?.length) {
+      // Only restore if it's more than the default 1 formation
+      if (saved.formations.length > 1 || saved.dancers.length !== 3) {
+        danceState.loadProject(saved.dancers, saved.formations);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const saveLabel = saveStatus === 'saving' ? 'Saving…'
+    : saveStatus === 'saved' ? (mode === 'file' ? 'File Sync' : 'Auto-Saved')
+    : (mode === 'file' ? 'File Sync' : 'Auto-Save');
+
+  const saveColor = saveStatus === 'saved'
+    ? '#4CAF50'
+    : 'var(--text-secondary)';
 
   const handleExport = () => {
-    const data = {
-      dancers: danceState.dancers,
-      formations: danceState.formations,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'dance-project.json';
+    const safeName = projectName.trim().replace(/[^a-z0-9_\-\s]/gi, '').trim() || 'dance-project';
+    a.download = `${safeName}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      setIsEditingName(false);
+    }
+  };
+
+  const handleNameBlur = () => {
+    if (!projectName.trim()) setProjectName('Untitled Dance');
+    setIsEditingName(false);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,12 +96,10 @@ function App() {
       }
     };
     reader.readAsText(file);
-    if (projectInputRef.current) {
-      projectInputRef.current.value = '';
-    }
+    if (projectInputRef.current) projectInputRef.current.value = '';
   };
 
-  // Sync timeline blocks to audio playback
+  // Sync timeline playback to formations
   useEffect(() => {
     if (audio.isPlaying) {
       let timeSum = 0;
@@ -72,16 +124,90 @@ function App() {
             DanceForm
           </div>
         </div>
-        <div>
-          Untitled Dance
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isEditingName ? (
+            <input
+              ref={nameInputRef}
+              value={projectName}
+              onChange={e => setProjectName(e.target.value)}
+              onBlur={handleNameBlur}
+              onKeyDown={handleNameKeyDown}
+              autoFocus
+              style={{
+                fontSize: '13px',
+                fontWeight: '500',
+                color: 'var(--text-primary)',
+                background: 'var(--bg-hover)',
+                border: '1px solid var(--accent-primary)',
+                borderRadius: '5px',
+                padding: '3px 8px',
+                minWidth: '160px',
+                outline: 'none',
+              }}
+            />
+          ) : (
+            <span
+              onClick={() => setIsEditingName(true)}
+              title="Click to rename"
+              style={{
+                fontSize: '13px',
+                fontWeight: '500',
+                color: 'var(--text-secondary)',
+                cursor: 'text',
+                padding: '3px 6px',
+                borderRadius: '5px',
+                border: '1px solid transparent',
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onMouseEnter={e => {
+                (e.target as HTMLElement).style.borderColor = 'var(--border-color)';
+                (e.target as HTMLElement).style.background = 'var(--bg-hover)';
+              }}
+              onMouseLeave={e => {
+                (e.target as HTMLElement).style.borderColor = 'transparent';
+                (e.target as HTMLElement).style.background = 'transparent';
+              }}
+            >
+              {projectName}
+            </span>
+          )}
+          {SAVE_STATUS_LABELS[saveStatus] && (
+            <span style={{
+              fontSize: '11px',
+              color: SAVE_STATUS_COLORS[saveStatus] || 'var(--text-muted)',
+              transition: 'color 0.3s'
+            }}>
+              · {SAVE_STATUS_LABELS[saveStatus]}
+            </span>
+          )}
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {/* Auto-Save button — always visible */}
+          <button
+            style={{
+              display: 'flex', alignItems: 'center', gap: '5px',
+              color: saveColor,
+              border: `1px solid ${saveStatus === 'saved' ? 'rgba(76,175,80,0.4)' : 'var(--border-color)'}`,
+              borderRadius: '6px', padding: '5px 10px', fontSize: '13px',
+              backgroundColor: saveStatus === 'saved' ? 'rgba(76,175,80,0.1)' : 'transparent',
+              transition: 'all 0.3s',
+              cursor: hasFileSystemAPI ? 'pointer' : 'default',
+            }}
+            onClick={hasFileSystemAPI ? pickSaveFile : undefined}
+            title={hasFileSystemAPI ? 'Click to set a local file target' : 'Auto-saving to browser storage'}
+          >
+            <HardDrive size={16} />
+            {saveLabel}
+          </button>
+
           <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={() => projectInputRef.current?.click()} title="Import Project">
             <Upload size={18} /> Import
           </button>
           <input type="file" ref={projectInputRef} onChange={handleImport} accept=".json" style={{ display: 'none' }} />
-          
-          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={handleExport} title="Export Project">
+
+          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={handleExport} title="Export snapshot">
             <Download size={18} /> Export
           </button>
 
@@ -93,12 +219,14 @@ function App() {
 
       {/* Main Workspace */}
       <main className="main-content">
-        <Sidebar 
-          dancers={danceState.dancers} 
-          onAddDancer={danceState.addDancer} 
+        <Sidebar
+          dancers={danceState.dancers}
+          onAddDancer={danceState.addDancer}
+          onUpdateDancer={danceState.updateDancer}
+          onDeleteDancer={danceState.deleteDancer}
         />
 
-        <Stage 
+        <Stage
           dancers={danceState.dancers}
           activeFormation={danceState.activeFormation}
           onUpdateDancerPosition={danceState.updateDancerPosition}
@@ -113,7 +241,7 @@ function App() {
         onDurationChange={danceState.updateFormationDuration}
         onTransitionChange={danceState.updateTransitionDuration}
         onDeleteFormation={danceState.deleteFormation}
-        
+
         isPlaying={audio.isPlaying}
         currentTime={audio.currentTime}
         duration={audio.duration}

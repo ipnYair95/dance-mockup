@@ -55,7 +55,8 @@
   transition: background-color 0.2s;
 }
 
-.dancer-item:hover {
+.dancer-item:hover,
+.dancer-item.active {
   background-color: var(--bg-hover);
 }
 

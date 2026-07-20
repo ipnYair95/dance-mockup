@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Dancer, Formation } from '../types';
+import type { Dancer, Formation, Shape } from '../types';
 
 export const STAGE_WIDTH = 800;
 export const STAGE_HEIGHT = 500;
@@ -56,6 +56,19 @@ export const useDanceState = () => {
     
     setFormations(prev => [...prev, newFormation]);
     setCurrentFormationIndex(formations.length);
+  };
+
+  const updateDancer = (id: string, updates: Partial<{ name: string; color: string; shape: Shape }>) => {
+    setDancers(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+  };
+
+  const deleteDancer = (id: string) => {
+    setDancers(prev => prev.filter(d => d.id !== id));
+    // Remove this dancer's position from all formations
+    setFormations(prev => prev.map(form => ({
+      ...form,
+      positions: form.positions.filter(p => p.dancerId !== id)
+    })));
   };
 
   const deleteFormation = (indices: number[]) => {
@@ -128,6 +141,8 @@ export const useDanceState = () => {
     currentFormationIndex,
     activeFormation,
     addDancer,
+    updateDancer,
+    deleteDancer,
     addFormation,
     deleteFormation,
     setCurrentFormationIndex,
