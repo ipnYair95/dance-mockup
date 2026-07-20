@@ -16,6 +16,7 @@ export interface DancerPosition {
 export interface Formation {
   id: string;
   name: string;
-  duration: number; // duration in seconds
+  duration: number; // total duration in seconds
+  transitionDuration: number; // transition time in seconds
   positions: DancerPosition[];
 }

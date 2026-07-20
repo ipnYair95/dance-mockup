@@ -25,6 +25,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition }: Stag
               position={pos}
               stageRef={stageRef}
               onDragEnd={onUpdateDancerPosition}
+              transitionDuration={activeFormation.transitionDuration}
             />
           );
         })}

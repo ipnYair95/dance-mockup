@@ -7,9 +7,10 @@ interface DancerOnStageProps {
   stageRef: React.RefObject<HTMLDivElement | null>;
   onDragEnd: (dancerId: string, x: number, y: number) => void;
   isInitialLoad?: boolean;
+  transitionDuration: number;
 }
 
-export function DancerOnStage({ dancer, position, stageRef, onDragEnd, isInitialLoad }: DancerOnStageProps) {
+export function DancerOnStage({ dancer, position, stageRef, onDragEnd, isInitialLoad, transitionDuration }: DancerOnStageProps) {
   const renderDancerShape = (d: Dancer) => {
     switch (d.shape) {
       case 'square':
@@ -42,7 +43,7 @@ export function DancerOnStage({ dancer, position, stageRef, onDragEnd, isInitial
         alignItems: 'center',
       }}
       whileDrag={{ scale: 1.1, cursor: 'grabbing', zIndex: 10 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      transition={{ type: 'tween', duration: transitionDuration, ease: 'easeInOut' }}
     >
       <svg width="30" height="30" style={{ overflow: 'visible' }}>
         {renderDancerShape(dancer)}

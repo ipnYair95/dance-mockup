@@ -76,3 +76,7 @@ input {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+.scroll{
+  overflow-x: hidden !important;
+}

@@ -6,8 +6,9 @@ interface FormationBlockProps {
   index: number;
   isActive: boolean;
   pixelsPerSecond: number;
-  onSelect: () => void;
+  onSelect: (e: React.MouseEvent) => void;
   onDurationChange: (newDuration: number) => void;
+  onTransitionChange: (newTransition: number) => void;
 }
 
 export function FormationBlock({
@@ -15,45 +16,82 @@ export function FormationBlock({
   isActive,
   pixelsPerSecond,
   onSelect,
-  onDurationChange
+  onDurationChange,
+  onTransitionChange
 }: FormationBlockProps) {
-  const [isResizing, setIsResizing] = useState(false);
+  const [isResizingDuration, setIsResizingDuration] = useState(false);
+  const [isResizingTransition, setIsResizingTransition] = useState(false);
+  
   const [currentWidth, setCurrentWidth] = useState(formation.duration * pixelsPerSecond);
+  const [currentTransitionWidth, setCurrentTransitionWidth] = useState(formation.transitionDuration * pixelsPerSecond);
+  
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
 
   useEffect(() => {
-    if (!isResizing) {
+    if (!isResizingDuration) {
       setCurrentWidth(formation.duration * pixelsPerSecond);
     }
-  }, [formation.duration, pixelsPerSecond, isResizing]);
+    if (!isResizingTransition) {
+      setCurrentTransitionWidth(formation.transitionDuration * pixelsPerSecond);
+    }
+  }, [formation.duration, formation.transitionDuration, pixelsPerSecond, isResizingDuration, isResizingTransition]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Duration Resize
+  const handleDurationMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsResizing(true);
+    setIsResizingDuration(true);
     startXRef.current = e.clientX;
     startWidthRef.current = currentWidth;
     
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleDurationMouseMove);
+    document.addEventListener('mouseup', handleDurationMouseUp);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleDurationMouseMove = (e: MouseEvent) => {
     const deltaX = e.clientX - startXRef.current;
     const newWidth = Math.max(20, startWidthRef.current + deltaX); // min 20px
     setCurrentWidth(newWidth);
   };
 
-  const handleMouseUp = (e: MouseEvent) => {
-    setIsResizing(false);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+  const handleDurationMouseUp = (e: MouseEvent) => {
+    setIsResizingDuration(false);
+    document.removeEventListener('mousemove', handleDurationMouseMove);
+    document.removeEventListener('mouseup', handleDurationMouseUp);
     
-    // Calculate new duration
     const deltaX = e.clientX - startXRef.current;
     const finalWidth = Math.max(20, startWidthRef.current + deltaX);
     const newDuration = finalWidth / pixelsPerSecond;
     onDurationChange(newDuration);
+  };
+
+  // Transition Resize
+  const handleTransitionMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizingTransition(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = currentTransitionWidth;
+    
+    document.addEventListener('mousemove', handleTransitionMouseMove);
+    document.addEventListener('mouseup', handleTransitionMouseUp);
+  };
+
+  const handleTransitionMouseMove = (e: MouseEvent) => {
+    const deltaX = e.clientX - startXRef.current;
+    // Transition cannot exceed duration width
+    const newWidth = Math.min(currentWidth, Math.max(5, startWidthRef.current + deltaX)); 
+    setCurrentTransitionWidth(newWidth);
+  };
+
+  const handleTransitionMouseUp = (e: MouseEvent) => {
+    setIsResizingTransition(false);
+    document.removeEventListener('mousemove', handleTransitionMouseMove);
+    document.removeEventListener('mouseup', handleTransitionMouseUp);
+    
+    const deltaX = e.clientX - startXRef.current;
+    const finalWidth = Math.min(currentWidth, Math.max(5, startWidthRef.current + deltaX));
+    const newTransition = finalWidth / pixelsPerSecond;
+    onTransitionChange(newTransition);
   };
 
   return (
@@ -62,10 +100,26 @@ export function FormationBlock({
       style={{ width: `${currentWidth}px`, flexShrink: 0 }}
       onClick={onSelect}
     >
-      <span style={{ pointerEvents: 'none' }}>{formation.name}</span>
+      <span style={{ position: 'relative', zIndex: 2, pointerEvents: 'none' }}>{formation.name}</span>
+      
+      {/* Visual representation of transition time */}
+      <div 
+        className="transition-overlay"
+        style={{ width: `${currentTransitionWidth}px` }}
+      >
+        {isActive && (
+          <div 
+            className="transition-resize-handle"
+            onMouseDown={handleTransitionMouseDown}
+            title="Adjust transition time"
+          />
+        )}
+      </div>
+
       <div 
         className="resize-handle"
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleDurationMouseDown}
+        title="Adjust formation duration"
       />
     </div>
   );
