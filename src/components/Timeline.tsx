@@ -135,6 +135,37 @@ export function Timeline({
     }
   }, [pixelsPerSecond]);
   
+  const clampZoom = (v: number) => Math.min(150, Math.max(5, v));
+
+  // Shift+Scroll or Shift+=/- to zoom the timeline
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!e.shiftKey) return;
+      e.preventDefault();
+      // Browsers often convert Shift+Vertical Scroll into Horizontal Scroll (deltaX)
+      const deltaVal = Math.abs(e.deltaY) > 0 ? e.deltaY : e.deltaX;
+      if (deltaVal === 0) return;
+      
+      const delta = deltaVal > 0 ? -5 : 5;
+      setPixelsPerSecond(p => clampZoom(p + delta));
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (!e.shiftKey) return;
+      if (e.key === '=' || e.key === '+') { e.preventDefault(); setPixelsPerSecond(p => clampZoom(p + 5)); }
+      if (e.key === '-') { e.preventDefault(); setPixelsPerSecond(p => clampZoom(p - 5)); }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
   const formatTime = (time: number) => {
     const mins = Math.floor(time / 60);
     const secs = Math.floor(time % 60);
