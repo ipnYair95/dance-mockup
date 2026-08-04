@@ -71,13 +71,13 @@ export function useAutoSave(data: ProjectData) {
   }, [data, writeToFile]);
 
   /** Ask the user to pick/create a target file (only when API is available). */
-  const pickSaveFile = useCallback(async () => {
+  const pickSaveFile = useCallback(async (suggestedName = 'dance-project.json') => {
     if (!hasFileSystemAPI) return;
     const picker = window.showSaveFilePicker;
     if (!picker) return;
     try {
       const handle = await picker({
-        suggestedName: 'dance-project.json',
+        suggestedName,
         types: [{ description: 'DanceForm Project', accept: { 'application/json': ['.json'] } }],
       });
       fileHandleRef.current = handle;
@@ -85,7 +85,13 @@ export function useAutoSave(data: ProjectData) {
       setHasFileTarget(true);
       await writeToFile(handle, data);
     } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') console.error(e);
+      if (e instanceof Error && e.name !== 'AbortError') {
+        if (fileHandleRef.current) {
+          await writeToFile(fileHandleRef.current, data);
+        } else {
+          console.error(e);
+        }
+      }
     }
   }, [data, writeToFile]);
 
