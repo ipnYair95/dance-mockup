@@ -1,6 +1,6 @@
 # SPEC 03 — Export con sobrescritura vía picker y nombre de proyecto desde el archivo importado
 
-**State:** Borrador
+**State:** Approved
 **Date:** 2026-08-04
 **Depends on:** —
 
