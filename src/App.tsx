@@ -6,6 +6,7 @@ import { Sidebar } from './components/Sidebar/Sidebar';
 import { Stage } from './components/Stage/Stage';
 import { Timeline } from './components/Timeline/Timeline';
 import { ConfirmModal } from './components/ConfirmModal/ConfirmModal';
+import { validateProject } from './utils/validateProject';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import './App.css';
 
@@ -86,8 +87,9 @@ function App() {
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        if (data.dancers && data.formations) {
-          danceState.loadProject(data.dancers, data.formations);
+        const project = validateProject(data);
+        if (project) {
+          danceState.loadProject(project.dancers, project.formations);
           const importedName = file.name.replace(/\.json$/i, '').trim();
           const name = importedName || 'Untitled Dance';
           setProjectName(name);
