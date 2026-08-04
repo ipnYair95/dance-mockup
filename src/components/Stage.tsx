@@ -28,9 +28,9 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
   // ── Multi-drag ───────────────────────────────────────────────────────────────
   // Stores live delta applied to co-selected dancers during a multi-drag
   const [coMoveOffset, setCoMoveOffset] = useState({ x: 0, y: 0 });
-  const isDraggingDancerRef = useRef(false);
-  const draggingDancerIdRef = useRef<string | null>(null);
-  const dragStartPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const [isDraggingDancer, setIsDraggingDancer] = useState(false);
+  const [draggingDancerId, setDraggingDancerId] = useState<string | null>(null);
+  const [dragStartPositions, setDragStartPositions] = useState<Map<string, { x: number; y: number }>>(new Map());
 
 
   // ── Pan pointer handlers ─────────────────────────────────────────────────────
@@ -57,8 +57,8 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
 
   // ── Dancer drag callbacks ────────────────────────────────────────────────────
   const handleDancerDragStart = useCallback((dancerId: string) => {
-    isDraggingDancerRef.current = true;
-    draggingDancerIdRef.current = dancerId;
+    setIsDraggingDancer(true);
+    setDraggingDancerId(dancerId);
 
     // Record start positions of all selected dancers for co-movement
     const startMap = new Map<string, { x: number; y: number }>();
@@ -67,7 +67,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
         startMap.set(p.dancerId, { x: p.x, y: p.y });
       }
     });
-    dragStartPositionsRef.current = startMap;
+    setDragStartPositions(startMap);
     setCoMoveOffset({ x: 0, y: 0 });
   }, [selectedIds, activeFormation.positions]);
 
@@ -78,14 +78,15 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
   }, [selectedIds]);
 
   const handleDancerDragEnd = useCallback((dancerId: string, offsetX: number, offsetY: number) => {
-    isDraggingDancerRef.current = false;
+    setIsDraggingDancer(false);
+    setDraggingDancerId(null);
     setCoMoveOffset({ x: 0, y: 0 });
 
     if (selectedIds.has(dancerId) && selectedIds.size > 1 && onUpdateMultiplePositions) {
       const updates = activeFormation.positions
         .filter(p => selectedIds.has(p.dancerId))
         .map(p => {
-          const start = dragStartPositionsRef.current.get(p.dancerId);
+          const start = dragStartPositions.get(p.dancerId);
           if (!start) return p;
           return { dancerId: p.dancerId, x: start.x + offsetX, y: start.y + offsetY };
         });
@@ -94,7 +95,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
       const pos = activeFormation.positions.find(p => p.dancerId === dancerId);
       if (pos) onUpdateDancerPosition(dancerId, pos.x + offsetX, pos.y + offsetY);
     }
-  }, [selectedIds, activeFormation.positions, onUpdateDancerPosition, onUpdateMultiplePositions]);
+  }, [selectedIds, activeFormation.positions, dragStartPositions, onUpdateDancerPosition, onUpdateMultiplePositions]);
 
   // ── Dancer click (selection) ─────────────────────────────────────────────────
   const handleDancerClick = useCallback((dancerId: string, e: React.MouseEvent) => {
@@ -180,9 +181,9 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
               if (!dancer) return null;
 
               // Compute effective position for co-moved dancers
-              const isDragged = draggingDancerIdRef.current === dancer.id;
-              const isCoMoved = selectedIds.has(dancer.id) && !isDragged && isDraggingDancerRef.current;
-              const start = dragStartPositionsRef.current.get(dancer.id);
+              const isDragged = draggingDancerId === dancer.id;
+              const isCoMoved = selectedIds.has(dancer.id) && !isDragged && isDraggingDancer;
+              const start = dragStartPositions.get(dancer.id);
               const effectivePos: DancerPosition = isCoMoved && start
                 ? { dancerId, x: start.x + coMoveOffset.x, y: start.y + coMoveOffset.y }
                 : pos;

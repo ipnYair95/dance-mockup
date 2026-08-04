@@ -25,6 +25,7 @@ const SAVE_STATUS_COLORS: Record<string, string> = {
 function App() {
   const danceState = useDanceState();
   const audio = useAudio();
+  const { formations, currentFormationIndex, setCurrentFormationIndex } = danceState;
   const projectInputRef = useRef<HTMLInputElement>(null);
   const [projectName, setProjectName] = useState('Untitled Dance');
   const [isEditingName, setIsEditingName] = useState(false);
@@ -103,17 +104,17 @@ function App() {
   useEffect(() => {
     if (audio.isPlaying) {
       let timeSum = 0;
-      for (let i = 0; i < danceState.formations.length; i++) {
-        timeSum += danceState.formations[i].duration;
+      for (let i = 0; i < formations.length; i++) {
+        timeSum += formations[i].duration;
         if (audio.currentTime < timeSum) {
-          if (danceState.currentFormationIndex !== i) {
-            danceState.setCurrentFormationIndex(i);
+          if (currentFormationIndex !== i) {
+            setCurrentFormationIndex(i);
           }
           break;
         }
       }
     }
-  }, [audio.currentTime, audio.isPlaying, danceState.formations, danceState.currentFormationIndex, danceState.setCurrentFormationIndex]);
+  }, [audio.currentTime, audio.isPlaying, formations, currentFormationIndex, setCurrentFormationIndex]);
 
   return (
     <div className="app-container">

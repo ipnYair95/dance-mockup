@@ -6,6 +6,17 @@ interface ProjectData {
   formations: Formation[];
 }
 
+interface SaveFilePickerOptions {
+  suggestedName?: string;
+  types?: { description?: string; accept: Record<string, string[]> }[];
+}
+
+declare global {
+  interface Window {
+    showSaveFilePicker?: (options?: SaveFilePickerOptions) => Promise<FileSystemFileHandle>;
+  }
+}
+
 const LS_KEY = 'danceform_autosave';
 const hasFileSystemAPI = typeof window !== 'undefined' && 'showSaveFilePicker' in window;
 
@@ -19,6 +30,19 @@ export function useAutoSave(data: ProjectData) {
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'idle'>('idle');
   const [mode, setMode] = useState<'file' | 'local'>('local');
+  const [hasFileTarget, setHasFileTarget] = useState(false);
+
+  const writeToFile = useCallback(async (handle: FileSystemFileHandle, projectData: ProjectData) => {
+    try {
+      setSaveStatus('saving');
+      const writable = await handle.createWritable();
+      await writable.write(JSON.stringify(projectData, null, 2));
+      await writable.close();
+      setSaveStatus('saved');
+    } catch (e) {
+      console.error('File auto-save failed:', e);
+    }
+  }, []);
 
   // ---- localStorage auto-save (always runs as fallback) ----
   useEffect(() => {
@@ -44,35 +68,26 @@ export function useAutoSave(data: ProjectData) {
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [data]);
-
-  const writeToFile = async (handle: FileSystemFileHandle, projectData: ProjectData) => {
-    try {
-      setSaveStatus('saving');
-      const writable = await (handle as any).createWritable();
-      await writable.write(JSON.stringify(projectData, null, 2));
-      await writable.close();
-      setSaveStatus('saved');
-    } catch (e) {
-      console.error('File auto-save failed:', e);
-    }
-  };
+  }, [data, writeToFile]);
 
   /** Ask the user to pick/create a target file (only when API is available). */
   const pickSaveFile = useCallback(async () => {
     if (!hasFileSystemAPI) return;
+    const picker = window.showSaveFilePicker;
+    if (!picker) return;
     try {
-      const handle = await (window as any).showSaveFilePicker({
+      const handle = await picker({
         suggestedName: 'dance-project.json',
         types: [{ description: 'DanceForm Project', accept: { 'application/json': ['.json'] } }],
       });
       fileHandleRef.current = handle;
       setMode('file');
+      setHasFileTarget(true);
       await writeToFile(handle, data);
-    } catch (e: any) {
-      if (e.name !== 'AbortError') console.error(e);
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') console.error(e);
     }
-  }, [data]);
+  }, [data, writeToFile]);
 
   /** Load the last auto-saved project from localStorage. */
   const loadFromLocalStorage = useCallback((): ProjectData | null => {
@@ -90,7 +105,7 @@ export function useAutoSave(data: ProjectData) {
     loadFromLocalStorage,
     saveStatus,
     mode,
-    hasFileTarget: fileHandleRef.current !== null,
+    hasFileTarget,
     hasFileSystemAPI,
   };
 }
