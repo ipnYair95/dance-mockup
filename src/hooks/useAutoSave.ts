@@ -106,9 +106,22 @@ export function useAutoSave(data: ProjectData) {
     }
   }, []);
 
+  /** Clear the file target and localStorage entry (e.g. after "New project"). */
+  const clearFileTarget = useCallback(() => {
+    fileHandleRef.current = null;
+    setMode('local');
+    setHasFileTarget(false);
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
+    localStorage.removeItem(LS_KEY);
+  }, []);
+
   return {
     pickSaveFile,
     loadFromLocalStorage,
+    clearFileTarget,
     saveStatus,
     mode,
     hasFileTarget,
