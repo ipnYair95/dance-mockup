@@ -94,6 +94,8 @@ function App() {
         const data = JSON.parse(event.target?.result as string);
         if (data.dancers && data.formations) {
           danceState.loadProject(data.dancers, data.formations);
+          const importedName = file.name.replace(/\.json$/i, '').trim();
+          setProjectName(importedName || 'Untitled Dance');
         }
       } catch (err) {
         console.error('Failed to parse project file', err);
@@ -200,7 +202,7 @@ function App() {
               transition: 'all 0.3s',
               cursor: hasFileSystemAPI ? 'pointer' : 'default',
             }}
-            onClick={hasFileSystemAPI ? pickSaveFile : undefined}
+            onClick={hasFileSystemAPI ? () => pickSaveFile() : undefined}
             title={hasFileSystemAPI ? 'Click to set a local file target' : 'Auto-saving to browser storage'}
           >
             <HardDrive size={16} />

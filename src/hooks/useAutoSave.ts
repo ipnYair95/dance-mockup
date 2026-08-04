@@ -85,7 +85,13 @@ export function useAutoSave(data: ProjectData) {
       setHasFileTarget(true);
       await writeToFile(handle, data);
     } catch (e) {
-      if (e instanceof Error && e.name !== 'AbortError') console.error(e);
+      if (e instanceof Error && e.name !== 'AbortError') {
+        if (fileHandleRef.current) {
+          await writeToFile(fileHandleRef.current, data);
+        } else {
+          console.error(e);
+        }
+      }
     }
   }, [data, writeToFile]);
 
