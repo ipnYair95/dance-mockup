@@ -1,4 +1,4 @@
-import { Settings, Download, Upload, HardDrive, Plus } from 'lucide-react';
+import { Footprints, Download, Upload, HardDrive, Loader2, CheckCircle2, Plus } from 'lucide-react';
 import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
 import { useAutoSave, saveProjectName, loadProjectName } from './hooks/useAutoSave';
@@ -8,20 +8,6 @@ import { Timeline } from './components/Timeline';
 import { ConfirmModal } from './components/ConfirmModal';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import './App.css';
-
-const SAVE_STATUS_LABELS: Record<string, string> = {
-  'idle': '',
-  'saving': 'Saving…',
-  'saved': 'Saved',
-  'no-file': '',
-  'unsupported': 'Not supported',
-};
-
-const SAVE_STATUS_COLORS: Record<string, string> = {
-  'saving': 'var(--text-muted)',
-  'saved': '#4CAF50',
-  'unsupported': '#f44336',
-};
 
 function App() {
   const danceState = useDanceState();
@@ -33,6 +19,7 @@ function App() {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [audioClearSignal, setAudioClearSignal] = useState(0);
+  const [isImporting, setIsImporting] = useState(false);
 
   // Memoize data so useAutoSave can do a stable reference comparison
   const projectData = useMemo(() => ({
@@ -98,6 +85,7 @@ function App() {
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsImporting(true);
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
@@ -112,6 +100,8 @@ function App() {
       } catch (err) {
         console.error('Failed to parse project file', err);
         alert('Invalid project file');
+      } finally {
+        setIsImporting(false);
       }
     };
     reader.readAsText(file);
@@ -148,12 +138,10 @@ function App() {
       {/* Top Bar */}
       <header className="top-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Footprints size={22} color="var(--accent-primary)" />
           <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--accent-primary)' }}>
             DanceForm
           </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {isEditingName ? (
             <input
               ref={nameInputRef}
@@ -200,15 +188,6 @@ function App() {
               {projectName}
             </span>
           )}
-          {SAVE_STATUS_LABELS[saveStatus] && (
-            <span style={{
-              fontSize: '11px',
-              color: SAVE_STATUS_COLORS[saveStatus] || 'var(--text-muted)',
-              transition: 'color 0.3s'
-            }}>
-              · {SAVE_STATUS_LABELS[saveStatus]}
-            </span>
-          )}
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -226,8 +205,14 @@ function App() {
             onClick={hasFileSystemAPI ? () => pickSaveFile() : undefined}
             title={hasFileSystemAPI ? 'Click to set a local file target' : 'Auto-saving to browser storage'}
           >
-            <HardDrive size={16} />
-            {saveLabel}
+            {saveStatus === 'saving' || isImporting ? (
+              <Loader2 size={16} className="spin" />
+            ) : saveStatus === 'saved' ? (
+              <CheckCircle2 size={16} />
+            ) : (
+              <HardDrive size={16} />
+            )}
+            {isImporting ? 'Loading…' : saveLabel}
           </button>
 
           <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={() => projectInputRef.current?.click()} title="Import Project">
@@ -241,10 +226,6 @@ function App() {
 
           <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={() => setIsConfirmOpen(true)} title="Start a new project">
             <Plus size={18} /> New
-          </button>
-
-          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <Settings size={18} /> Settings
           </button>
         </div>
       </header>
