@@ -59,12 +59,16 @@ function App() {
     ? '#4CAF50'
     : 'var(--text-secondary)';
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    const safeName = projectName.trim().replace(/[^a-z0-9_\-\s]/gi, '').trim() || 'dance-project';
+    if (hasFileSystemAPI) {
+      await pickSaveFile(`${safeName}.json`);
+      return;
+    }
     const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const safeName = projectName.trim().replace(/[^a-z0-9_\-\s]/gi, '').trim() || 'dance-project';
     a.download = `${safeName}.json`;
     a.click();
     URL.revokeObjectURL(url);
