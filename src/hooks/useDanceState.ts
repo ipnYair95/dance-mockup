@@ -5,13 +5,13 @@ import { useUndoHistory } from './useUndoHistory';
 export const STAGE_WIDTH = 800;
 export const STAGE_HEIGHT = 500;
 
-const DEFAULT_DANCERS: Dancer[] = [
+export const DEFAULT_DANCERS: Dancer[] = [
   { id: '1', name: 'Dancer 1', color: '#E91E63', shape: 'circle' },
   { id: '2', name: 'Dancer 2', color: '#2196F3', shape: 'square' },
   { id: '3', name: 'Dancer 3', color: '#4CAF50', shape: 'triangle' },
 ];
 
-const DEFAULT_FORMATIONS: Formation[] = [
+export const DEFAULT_FORMATIONS: Formation[] = [
   {
     id: 'form-1',
     name: 'Formation 1',
@@ -168,6 +168,13 @@ export const useDanceState = () => {
     setCurrentFormationIndex(0);
   };
 
+  const clearProject = () => {
+    setDancers(DEFAULT_DANCERS);
+    setFormations(DEFAULT_FORMATIONS);
+    setCurrentFormationIndex(0);
+    history.reset({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
+  };
+
   return {
     dancers,
     formations,
@@ -184,6 +191,7 @@ export const useDanceState = () => {
     updateFormationDuration,
     updateTransitionDuration,
     loadProject,
+    clearProject,
     canUndo: history.canUndo,
     canRedo: history.canRedo,
   };

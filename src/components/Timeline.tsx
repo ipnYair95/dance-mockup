@@ -19,6 +19,7 @@ interface TimelineProps {
   onSeek: (time: number) => void;
   onAudioUpload: (file: File) => void;
   onDeleteFormation: (indices: number[]) => void;
+  clearSignal?: number;
 }
 
 export function Timeline({
@@ -34,7 +35,8 @@ export function Timeline({
   onTogglePlay,
   onSeek,
   onAudioUpload,
-  onDeleteFormation
+  onDeleteFormation,
+  clearSignal = 0
 }: TimelineProps) {
   const [pixelsPerSecond, setPixelsPerSecond] = useState(30);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set([currentFormationIndex]));
@@ -127,6 +129,17 @@ export function Timeline({
       }
     }
   }, [pixelsPerSecond]);
+
+  // Clear the loaded audio wave when the app signals a project reset
+  useEffect(() => {
+    if (clearSignal > 0 && wavesurfer.current) {
+      try {
+        wavesurfer.current.empty();
+      } catch {
+        console.warn("WaveSurfer clear failed.");
+      }
+    }
+  }, [clearSignal]);
   
   const clampZoom = (v: number) => Math.min(150, Math.max(5, v));
 

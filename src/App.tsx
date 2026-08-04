@@ -1,10 +1,11 @@
-import { Settings, Download, Upload, HardDrive } from 'lucide-react';
-import { useDanceState } from './hooks/useDanceState';
+import { Settings, Download, Upload, HardDrive, Plus } from 'lucide-react';
+import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
-import { useAutoSave } from './hooks/useAutoSave';
+import { useAutoSave, saveProjectName, loadProjectName } from './hooks/useAutoSave';
 import { Sidebar } from './components/Sidebar';
 import { Stage } from './components/Stage';
 import { Timeline } from './components/Timeline';
+import { ConfirmModal } from './components/ConfirmModal';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import './App.css';
 
@@ -27,9 +28,11 @@ function App() {
   const audio = useAudio();
   const { formations, currentFormationIndex, setCurrentFormationIndex } = danceState;
   const projectInputRef = useRef<HTMLInputElement>(null);
-  const [projectName, setProjectName] = useState('Untitled Dance');
+  const [projectName, setProjectName] = useState(() => loadProjectName() || 'Untitled Dance');
   const [isEditingName, setIsEditingName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [audioClearSignal, setAudioClearSignal] = useState(0);
 
   // Memoize data so useAutoSave can do a stable reference comparison
   const projectData = useMemo(() => ({
@@ -37,14 +40,14 @@ function App() {
     formations: danceState.formations,
   }), [danceState.dancers, danceState.formations]);
 
-  const { pickSaveFile, loadFromLocalStorage, saveStatus, mode, hasFileSystemAPI } = useAutoSave(projectData);
+  const { pickSaveFile, loadFromLocalStorage, clearFileTarget, saveStatus, mode, hasFileSystemAPI } = useAutoSave(projectData);
 
-  // On first load, offer to restore from localStorage if data exists
+  // On first load, restore from localStorage if it differs from the defaults
   useEffect(() => {
     const saved = loadFromLocalStorage();
-    if (saved?.dancers?.length && saved?.formations?.length) {
-      // Only restore if it's more than the default 1 formation
-      if (saved.formations.length > 1 || saved.dancers.length !== 3) {
+    if (saved) {
+      const isDefault = JSON.stringify(saved) === JSON.stringify({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
+      if (!isDefault) {
         danceState.loadProject(saved.dancers, saved.formations);
       }
     }
@@ -62,7 +65,12 @@ function App() {
   const handleExport = async () => {
     const safeName = projectName.trim().replace(/[^a-z0-9_\-\s]/gi, '').trim() || 'dance-project';
     if (hasFileSystemAPI) {
-      await pickSaveFile(`${safeName}.json`);
+      const chosenName = await pickSaveFile(`${safeName}.json`);
+      if (chosenName) {
+        const base = chosenName.replace(/\.json$/i, '').trim() || 'Untitled Dance';
+        setProjectName(base);
+        saveProjectName(base);
+      }
       return;
     }
     const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
@@ -81,7 +89,9 @@ function App() {
   };
 
   const handleNameBlur = () => {
-    if (!projectName.trim()) setProjectName('Untitled Dance');
+    const name = projectName.trim() || 'Untitled Dance';
+    setProjectName(name);
+    saveProjectName(name);
     setIsEditingName(false);
   };
 
@@ -95,7 +105,9 @@ function App() {
         if (data.dancers && data.formations) {
           danceState.loadProject(data.dancers, data.formations);
           const importedName = file.name.replace(/\.json$/i, '').trim();
-          setProjectName(importedName || 'Untitled Dance');
+          const name = importedName || 'Untitled Dance';
+          setProjectName(name);
+          saveProjectName(name);
         }
       } catch (err) {
         console.error('Failed to parse project file', err);
@@ -104,6 +116,15 @@ function App() {
     };
     reader.readAsText(file);
     if (projectInputRef.current) projectInputRef.current.value = '';
+  };
+
+  const handleNewProject = () => {
+    setIsConfirmOpen(false);
+    setProjectName('Untitled Dance');
+    danceState.clearProject();
+    clearFileTarget();
+    audio.clearAudio();
+    setAudioClearSignal(s => s + 1);
   };
 
   // Sync timeline playback to formations
@@ -218,6 +239,10 @@ function App() {
             <Download size={18} /> Export
           </button>
 
+          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={() => setIsConfirmOpen(true)} title="Start a new project">
+            <Plus size={18} /> New
+          </button>
+
           <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <Settings size={18} /> Settings
           </button>
@@ -256,7 +281,18 @@ function App() {
         onTogglePlay={audio.togglePlay}
         onSeek={audio.seek}
         onAudioUpload={audio.loadAudio}
+        clearSignal={audioClearSignal}
       />
+
+      {isConfirmOpen && (
+        <ConfirmModal
+          title="Start a new project?"
+          message="This will clear the stage, reset the project name, stop the audio and disconnect the auto-save file. This action cannot be undone."
+          confirmLabel="Start New"
+          onConfirm={handleNewProject}
+          onCancel={() => setIsConfirmOpen(false)}
+        />
+      )}
     </div>
   );
 }

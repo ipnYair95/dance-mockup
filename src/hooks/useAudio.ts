@@ -59,12 +59,24 @@ export const useAudio = () => {
     }
   };
 
+  const clearAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+      audioRef.current.load();
+    }
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
   return {
     isPlaying,
     currentTime,
     duration,
     loadAudio,
     togglePlay,
-    seek
+    seek,
+    clearAudio
   };
 };
