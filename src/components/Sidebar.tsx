@@ -59,9 +59,9 @@ function DancerEditPanel({
     <div
       ref={panelRef}
       style={{
-        position: 'absolute',
-        left: '220px',
-        top: 0,
+        position: 'fixed',
+        left: '260px',
+        top: '60px',
         zIndex: 100,
         width: '220px',
         background: 'var(--bg-card)',
@@ -197,6 +197,7 @@ function DancerEditPanel({
 
 export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editingDancer = editingId !== null ? dancers.find(d => d.id === editingId) : null;
 
   const DancerShape = ({ dancer }: { dancer: Dancer }) => {
     switch (dancer.shape) {
@@ -233,18 +234,18 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
               <span style={{ flex: 1, marginLeft: '8px', fontSize: '13px' }}>{dancer.name}</span>
               <Pencil size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
             </div>
-
-            {editingId === dancer.id && (
-              <DancerEditPanel
-                dancer={dancer}
-                onUpdate={(updates) => onUpdateDancer(dancer.id, updates)}
-                onDelete={() => onDeleteDancer(dancer.id)}
-                onClose={() => setEditingId(null)}
-              />
-            )}
           </div>
         ))}
       </div>
+
+      {editingDancer && (
+        <DancerEditPanel
+          dancer={editingDancer}
+          onUpdate={(updates) => onUpdateDancer(editingDancer.id, updates)}
+          onDelete={() => onDeleteDancer(editingDancer.id)}
+          onClose={() => setEditingId(null)}
+        />
+      )}
     </aside>
   );
 }
