@@ -23,6 +23,11 @@ export function useUndoHistory() {
     future.current = []; // Any new action clears the redo stack
   }, []);
 
+  const reset = useCallback((snapshot: Snapshot) => {
+    past.current = [snapshot];
+    future.current = [];
+  }, []);
+
   const undo = useCallback((): Snapshot | null => {
     if (past.current.length < 2) return null; // Need at least 2: current + previous
     const current = past.current[past.current.length - 1];
@@ -44,5 +49,5 @@ export function useUndoHistory() {
   const canUndo = () => past.current.length >= 2;
   const canRedo = () => future.current.length > 0;
 
-  return { push, undo, redo, canUndo, canRedo };
+  return { push, reset, undo, redo, canUndo, canRedo };
 }

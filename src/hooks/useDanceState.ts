@@ -168,6 +168,13 @@ export const useDanceState = () => {
     setCurrentFormationIndex(0);
   };
 
+  const clearProject = () => {
+    setDancers(DEFAULT_DANCERS);
+    setFormations(DEFAULT_FORMATIONS);
+    setCurrentFormationIndex(0);
+    history.reset({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
+  };
+
   return {
     dancers,
     formations,
@@ -184,6 +191,7 @@ export const useDanceState = () => {
     updateFormationDuration,
     updateTransitionDuration,
     loadProject,
+    clearProject,
     canUndo: history.canUndo,
     canRedo: history.canRedo,
   };
