@@ -1,6 +1,6 @@
 # SPEC 01 — Panel de edición de bailarín en posición fija (sin scroll extra)
 
-**State:** Approved
+**State:** Implementado
 **Date:** 2026-08-04
 **Depends on:** —
 
