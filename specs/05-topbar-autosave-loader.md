@@ -1,6 +1,6 @@
 # SPEC 05 — Top bar: loader de guardado/import en el chip, sin Settings, nombre junto al título con icono
 
-**State:** Approved
+**State:** Implemented
 **Date:** 2026-08-04
 **Depends on:** —
 
