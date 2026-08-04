@@ -1,6 +1,6 @@
 # SPEC 04 — Nuevo proyecto: botón con confirmación que limpia el tablero y desvincula el autoguardado
 
-**State:** Approved
+**State:** Implemented
 **Date:** 2026-08-04
 **Depends on:** —
 
