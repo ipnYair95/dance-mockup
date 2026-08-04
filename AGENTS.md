@@ -5,7 +5,7 @@ Vite + React 19 + TypeScript app ("DanceForm"): a choreography mockup editor for
 ## Commands
 - `npm run dev` — Vite dev server
 - `npm run build` — `tsc -b && vite build` (also the only typecheck path; no separate typecheck script)
-- `npm run lint` — ESLint (react-hooks + react-refresh rules)
+- `npm run lint` — ESLint (react-hooks + react-refresh rules). Runs with `--max-warnings 0`: any warning or error fails.
 - No test framework or test scripts exist in this repo.
 
 ## Architecture
@@ -19,6 +19,7 @@ Vite + React 19 + TypeScript app ("DanceForm"): a choreography mockup editor for
 - `verbatimModuleSyntax` is on → use `import type { ... }` for type-only imports.
 - `erasableSyntaxOnly` is on → no enums, namespaces, or constructor parameter properties; use string-literal unions (e.g. `Shape` in `src/types/index.ts`).
 - `noUnusedLocals` / `noUnusedParameters` are on; keep them clean.
+- `react-hooks` v6 rules (`set-state-in-effect`, `refs`, `immutability`, `exhaustive-deps`) are project standard. Refactor code to satisfy them; do not suppress them with `eslint-disable`.
 
 ## Gotchas
 - `README.md` is the untouched Vite template — ignore it.

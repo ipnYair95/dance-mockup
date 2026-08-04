@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Formation } from '../types';
 
 interface FormationBlockProps {
@@ -28,21 +28,17 @@ export function FormationBlock({
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
 
-  useEffect(() => {
-    if (!isResizingDuration) {
-      setCurrentWidth(formation.duration * pixelsPerSecond);
-    }
-    if (!isResizingTransition) {
-      setCurrentTransitionWidth(formation.transitionDuration * pixelsPerSecond);
-    }
-  }, [formation.duration, formation.transitionDuration, pixelsPerSecond, isResizingDuration, isResizingTransition]);
+  const width = isResizingDuration ? currentWidth : formation.duration * pixelsPerSecond;
+  const transitionWidth = isResizingTransition ? currentTransitionWidth : formation.transitionDuration * pixelsPerSecond;
 
   // Duration Resize
   const handleDurationMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsResizingDuration(true);
+    const startWidth = width;
+    setCurrentWidth(startWidth);
     startXRef.current = e.clientX;
-    startWidthRef.current = currentWidth;
+    startWidthRef.current = startWidth;
+    setIsResizingDuration(true);
     
     document.addEventListener('mousemove', handleDurationMouseMove);
     document.addEventListener('mouseup', handleDurationMouseUp);
@@ -68,9 +64,11 @@ export function FormationBlock({
   // Transition Resize
   const handleTransitionMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsResizingTransition(true);
+    const startWidth = transitionWidth;
+    setCurrentTransitionWidth(startWidth);
     startXRef.current = e.clientX;
-    startWidthRef.current = currentTransitionWidth;
+    startWidthRef.current = startWidth;
+    setIsResizingTransition(true);
     
     document.addEventListener('mousemove', handleTransitionMouseMove);
     document.addEventListener('mouseup', handleTransitionMouseUp);
@@ -79,7 +77,7 @@ export function FormationBlock({
   const handleTransitionMouseMove = (e: MouseEvent) => {
     const deltaX = e.clientX - startXRef.current;
     // Transition cannot exceed duration width
-    const newWidth = Math.min(currentWidth, Math.max(5, startWidthRef.current + deltaX)); 
+    const newWidth = Math.min(width, Math.max(5, startWidthRef.current + deltaX)); 
     setCurrentTransitionWidth(newWidth);
   };
 
@@ -89,7 +87,7 @@ export function FormationBlock({
     document.removeEventListener('mouseup', handleTransitionMouseUp);
     
     const deltaX = e.clientX - startXRef.current;
-    const finalWidth = Math.min(currentWidth, Math.max(5, startWidthRef.current + deltaX));
+    const finalWidth = Math.min(width, Math.max(5, startWidthRef.current + deltaX));
     const newTransition = finalWidth / pixelsPerSecond;
     onTransitionChange(newTransition);
   };
@@ -97,7 +95,7 @@ export function FormationBlock({
   return (
     <div
       className={`formation-block ${isActive ? 'active' : ''}`}
-      style={{ width: `${currentWidth}px`, flexShrink: 0 }}
+      style={{ width: `${width}px`, flexShrink: 0 }}
       onClick={onSelect}
     >
       <span style={{ position: 'relative', zIndex: 2, pointerEvents: 'none' }}>{formation.name}</span>
@@ -105,7 +103,7 @@ export function FormationBlock({
       {/* Visual representation of transition time */}
       <div 
         className="transition-overlay"
-        style={{ width: `${currentTransitionWidth}px` }}
+        style={{ width: `${transitionWidth}px` }}
       >
         {isActive && (
           <div 

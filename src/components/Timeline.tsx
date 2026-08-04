@@ -105,13 +105,6 @@ export function Timeline({
     };
   }, [currentFormationIndex, formations.length, onDeleteFormation, selectedIndices]);
 
-  // Keep selection in sync if currentFormationIndex changes externally
-  useEffect(() => {
-    if (!selectedIndices.has(currentFormationIndex)) {
-      setSelectedIndices(new Set([currentFormationIndex]));
-    }
-  }, [currentFormationIndex]);
-
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -129,7 +122,7 @@ export function Timeline({
       try {
         // wavesurfer might throw if no audio is loaded yet
         wavesurfer.current.zoom(pixelsPerSecond);
-      } catch (e) {
+      } catch {
         console.warn("WaveSurfer zoom failed, audio might not be loaded yet.");
       }
     }
@@ -306,7 +299,7 @@ export function Timeline({
                 key={form.id}
                 formation={form}
                 index={index}
-                isActive={selectedIndices.has(index)}
+                isActive={selectedIndices.has(index) || index === currentFormationIndex}
                 pixelsPerSecond={pixelsPerSecond}
                 onSelect={(e) => {
                   if (e.shiftKey || e.metaKey || e.ctrlKey) {

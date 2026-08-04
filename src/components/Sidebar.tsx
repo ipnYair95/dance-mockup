@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import type { Dancer, Shape } from '../types';
 
@@ -38,6 +38,11 @@ function DancerEditPanel({
   const [shape, setShape] = useState<Shape>(dancer.shape);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const handleSave = useCallback(() => {
+    onUpdate({ name: name.trim() || dancer.name, color, shape });
+    onClose();
+  }, [name, color, shape, dancer.name, onUpdate, onClose]);
+
   // Save on click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -48,12 +53,7 @@ function DancerEditPanel({
     // Slight delay so the click that opened the panel doesn't immediately close it
     setTimeout(() => document.addEventListener('mousedown', handler), 10);
     return () => document.removeEventListener('mousedown', handler);
-  }, [name, color, shape]);
-
-  const handleSave = () => {
-    onUpdate({ name: name.trim() || dancer.name, color, shape });
-    onClose();
-  };
+  }, [handleSave]);
 
   return (
     <div
