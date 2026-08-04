@@ -1,0 +1,81 @@
+.formationBlock {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-left: none; /* remove double borders */
+  padding: 5px 15px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background-color 0.2s, border-color 0.2s;
+  position: relative; /* for absolute resize handle */
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &:first-child {
+    border-left: 1px solid var(--border-color);
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+  }
+
+  &:last-child {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+
+  &.isActive {
+    background-color: var(--bg-hover);
+    border-color: #FFFFFF;
+    color: white;
+    z-index: 2; /* Bring active border above others */
+  }
+}
+
+.blockLabel {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.transitionOverlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background-color: rgba(124, 58, 237, 0.4); /* Violet overlay for transition */
+  border-right: 2px solid #7C3AED;
+  z-index: 1;
+}
+
+.transitionResizeHandle {
+  position: absolute;
+  right: -5px;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+  z-index: 10;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: ew-resize;
+  background-color: rgba(255, 255, 255, 0.1);
+  z-index: 5;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+}

@@ -1,0 +1,159 @@
+.timeline {
+  height: 220px;
+  background-color: var(--bg-timeline);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+}
+
+.timelineControls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  transition: background-color 0.15s, color 0.15s;
+
+  &:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+}
+
+.timeLabel {
+  font-size: 14px;
+  font-family: monospace;
+  min-width: 70px;
+}
+
+.actionBtns {
+  margin-left: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.addFormationBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--bg-hover);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--bg-active);
+  }
+}
+
+.addAudioBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--bg-card);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+}
+
+.zoomControls {
+  margin-left: auto;
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+.timelineTrackContainer {
+  flex: 1;
+  position: relative;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 5px 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  &.grab {
+    cursor: grab;
+  }
+
+  &.grabbing {
+    cursor: grabbing;
+  }
+}
+
+.timelineContent {
+  position: relative;
+  min-height: 100%;
+}
+
+.ruler {
+  height: 20px;
+  position: relative;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rulerTick {
+  position: absolute;
+  height: 100%;
+  border-left: 1px solid var(--border-color);
+  padding-left: 3px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.audioTrack {
+  height: 40px;
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.audioEmpty {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.formationsTrack {
+  display: flex;
+  height: 40px;
+  margin-top: 10px;
+  align-items: center;
+  position: relative;
+}
+
+.playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--accent-primary);
+  z-index: 20;
+  pointer-events: none;
+  box-shadow: 0 0 5px rgba(124, 58, 237, 0.5);
+}

@@ -1,0 +1,217 @@
+.sidebar {
+  width: 250px;
+  background-color: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarHeader {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.addDancerBtn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s;
+
+  &:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+  }
+}
+
+.dancersList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.dancerRow {
+  position: relative;
+}
+
+.dancerItem {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius);
+  margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+
+  &:hover,
+  &.isActive {
+    background-color: var(--bg-hover);
+  }
+}
+
+.editPanel {
+  position: fixed;
+  left: 260px;
+  top: 60px;
+  z-index: 100;
+  width: 220px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.field {
+  margin-bottom: 12px;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.nameInput {
+  width: 100%;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--text-primary);
+  box-sizing: border-box;
+}
+
+.shapeRow {
+  display: flex;
+  gap: 8px;
+}
+
+.shapeButton {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.colorButton {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.customColorRow {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorInput {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+}
+
+.hexValue {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+.saveButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background: var(--accent-hover);
+  }
+}
+
+.deleteButton {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: rgba(244, 67, 54, 0.15);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background: rgba(244, 67, 54, 0.3);
+  }
+}
+
+.cancelButton {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background: var(--bg-active);
+  }
+}

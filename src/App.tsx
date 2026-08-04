@@ -2,10 +2,10 @@ import { Footprints, Download, Upload, HardDrive, Loader2, CheckCircle2, Plus } 
 import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
 import { useAutoSave, saveProjectName, loadProjectName } from './hooks/useAutoSave';
-import { Sidebar } from './components/Sidebar';
-import { Stage } from './components/Stage';
-import { Timeline } from './components/Timeline';
-import { ConfirmModal } from './components/ConfirmModal';
+import { Sidebar } from './components/Sidebar/Sidebar';
+import { Stage } from './components/Stage/Stage';
+import { Timeline } from './components/Timeline/Timeline';
+import { ConfirmModal } from './components/ConfirmModal/ConfirmModal';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import './App.css';
 
@@ -44,10 +44,6 @@ function App() {
   const saveLabel = saveStatus === 'saving' ? 'Saving…'
     : saveStatus === 'saved' ? (mode === 'file' ? 'File Sync' : 'Auto-Saved')
     : (mode === 'file' ? 'File Sync' : 'Auto-Save');
-
-  const saveColor = saveStatus === 'saved'
-    ? '#4CAF50'
-    : 'var(--text-secondary)';
 
   const handleExport = async () => {
     const safeName = projectName.trim().replace(/[^a-z0-9_\-\s]/gi, '').trim() || 'dance-project';
@@ -137,9 +133,9 @@ function App() {
     <div className="app-container">
       {/* Top Bar */}
       <header className="top-bar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="top-bar-left">
           <Footprints size={22} color="var(--accent-primary)" />
-          <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--accent-primary)' }}>
+          <div className="top-bar-title">
             DanceForm
           </div>
           {isEditingName ? (
@@ -150,58 +146,23 @@ function App() {
               onBlur={handleNameBlur}
               onKeyDown={handleNameKeyDown}
               autoFocus
-              style={{
-                fontSize: '13px',
-                fontWeight: '500',
-                color: 'var(--text-primary)',
-                background: 'var(--bg-hover)',
-                border: '1px solid var(--accent-primary)',
-                borderRadius: '5px',
-                padding: '3px 8px',
-                minWidth: '160px',
-                outline: 'none',
-              }}
+              className="project-name-input"
             />
           ) : (
             <span
               onClick={() => setIsEditingName(true)}
               title="Click to rename"
-              style={{
-                fontSize: '13px',
-                fontWeight: '500',
-                color: 'var(--text-secondary)',
-                cursor: 'text',
-                padding: '3px 6px',
-                borderRadius: '5px',
-                border: '1px solid transparent',
-                transition: 'border-color 0.15s, background 0.15s',
-              }}
-              onMouseEnter={e => {
-                (e.target as HTMLElement).style.borderColor = 'var(--border-color)';
-                (e.target as HTMLElement).style.background = 'var(--bg-hover)';
-              }}
-              onMouseLeave={e => {
-                (e.target as HTMLElement).style.borderColor = 'transparent';
-                (e.target as HTMLElement).style.background = 'transparent';
-              }}
+              className="project-name-span"
             >
               {projectName}
             </span>
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <div className="top-bar-right">
           {/* Auto-Save button — always visible */}
           <button
-            style={{
-              display: 'flex', alignItems: 'center', gap: '5px',
-              color: saveColor,
-              border: `1px solid ${saveStatus === 'saved' ? 'rgba(76,175,80,0.4)' : 'var(--border-color)'}`,
-              borderRadius: '6px', padding: '5px 10px', fontSize: '13px',
-              backgroundColor: saveStatus === 'saved' ? 'rgba(76,175,80,0.1)' : 'transparent',
-              transition: 'all 0.3s',
-              cursor: hasFileSystemAPI ? 'pointer' : 'default',
-            }}
+            className={`autosave-btn ${saveStatus === 'saved' ? 'is-saved' : ''} ${!hasFileSystemAPI ? 'is-static' : ''}`}
             onClick={hasFileSystemAPI ? () => pickSaveFile() : undefined}
             title={hasFileSystemAPI ? 'Click to set a local file target' : 'Auto-saving to browser storage'}
           >
@@ -215,16 +176,16 @@ function App() {
             {isImporting ? 'Loading…' : saveLabel}
           </button>
 
-          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={() => projectInputRef.current?.click()} title="Import Project">
+          <button className="icon-btn" onClick={() => projectInputRef.current?.click()} title="Import Project">
             <Upload size={18} /> Import
           </button>
           <input type="file" ref={projectInputRef} onChange={handleImport} accept=".json" style={{ display: 'none' }} />
 
-          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={handleExport} title="Export snapshot">
+          <button className="icon-btn" onClick={handleExport} title="Export snapshot">
             <Download size={18} /> Export
           </button>
 
-          <button style={{ display: 'flex', alignItems: 'center', gap: '5px' }} onClick={() => setIsConfirmOpen(true)} title="Start a new project">
+          <button className="icon-btn" onClick={() => setIsConfirmOpen(true)} title="Start a new project">
             <Plus size={18} /> New
           </button>
         </div>

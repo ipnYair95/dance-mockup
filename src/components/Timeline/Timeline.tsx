@@ -1,8 +1,9 @@
 import { Plus, Play, Pause, SkipBack, Music, ZoomIn, ZoomOut } from 'lucide-react';
-import type { Formation } from '../types';
-import { FormationBlock } from './FormationBlock';
+import type { Formation } from '../../types';
+import { FormationBlock } from '../FormationBlock/FormationBlock';
 import { useRef, useEffect, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
+import styles from './Timeline.module.scss';
 
 interface TimelineProps {
   formations: Formation[];
@@ -11,7 +12,7 @@ interface TimelineProps {
   onSelectFormation: (index: number) => void;
   onDurationChange: (index: number, newDuration: number) => void;
   onTransitionChange: (index: number, newTransition: number) => void;
-  
+
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -44,22 +45,22 @@ export function Timeline({
   const [isPanning, setIsPanning] = useState(false);
   const panStartRef = useRef(0);
   const scrollStartRef = useRef(0);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
-  
+
   // Total time needed for the timeline (either audio duration or sum of formations)
   const totalFormationsDuration = formations.reduce((acc, f) => acc + f.duration, 0);
   const timelineDuration = Math.max(duration || 0, totalFormationsDuration, 60); // min 60s
-  
+
   useEffect(() => {
     if (waveformRef.current && !wavesurfer.current) {
       wavesurfer.current = WaveSurfer.create({
         container: waveformRef.current,
-        waveColor: '#E91E63',
-        progressColor: '#D81B60',
+        waveColor: '#7C3AED',
+        progressColor: '#6D28D9',
         height: 40,
         barWidth: 2,
         barRadius: 2,
@@ -140,7 +141,7 @@ export function Timeline({
       }
     }
   }, [clearSignal]);
-  
+
   const clampZoom = (v: number) => Math.min(150, Math.max(5, v));
 
   // Shift+Scroll or Shift+=/- to zoom the timeline
@@ -154,7 +155,7 @@ export function Timeline({
       // Browsers often convert Shift+Vertical Scroll into Horizontal Scroll (deltaX)
       const deltaVal = Math.abs(e.deltaY) > 0 ? e.deltaY : e.deltaX;
       if (deltaVal === 0) return;
-      
+
       const delta = deltaVal > 0 ? -5 : 5;
       setPixelsPerSecond(p => clampZoom(p + delta));
     };
@@ -214,15 +215,7 @@ export function Timeline({
     const numTicks = Math.ceil(timelineDuration);
     for (let i = 0; i <= numTicks; i++) {
       ticks.push(
-        <div key={i} style={{ 
-          position: 'absolute', 
-          left: `${i * pixelsPerSecond}px`, 
-          height: '100%', 
-          borderLeft: '1px solid var(--border-color)',
-          paddingLeft: '3px',
-          fontSize: '10px',
-          color: 'var(--text-muted)'
-        }}>
+        <div key={i} className={styles.rulerTick} style={{ left: `${i * pixelsPerSecond}px` }}>
           {i}s
         </div>
       );
@@ -230,83 +223,77 @@ export function Timeline({
     return ticks;
   };
 
+  const trackCursorClass = isSpacePressed
+    ? (isPanning ? styles.grabbing : styles.grab)
+    : '';
+
   return (
-    <footer className="timeline" style={{ height: '220px' }}>
-      <div className="timeline-controls">
-        <button onClick={() => onSeek(0)}><SkipBack size={20} /></button>
-        <button onClick={onTogglePlay}>
+    <footer className={styles.timeline}>
+      <div className={styles.timelineControls}>
+        <button className={styles.iconBtn} onClick={() => onSeek(0)} title="Jump to start"><SkipBack size={20} /></button>
+        <button className={styles.iconBtn} onClick={onTogglePlay} title={isPlaying ? 'Pause' : 'Play'}>
           {isPlaying ? <Pause size={24} /> : <Play size={24} />}
         </button>
-        <span style={{ fontSize: '14px', fontFamily: 'monospace', minWidth: '70px' }}>
+        <span className={styles.timeLabel}>
           {formatTime(currentTime)}
         </span>
-        
-        <div style={{ marginLeft: '10px', display: 'flex', gap: '10px' }}>
-          <button className="add-formation-btn" onClick={onAddFormation}>
+
+        <div className={styles.actionBtns}>
+          <button className={styles.addFormationBtn} onClick={onAddFormation}>
             <Plus size={16} /> New Formation
           </button>
-          
-          <button className="add-formation-btn" onClick={() => fileInputRef.current?.click()} style={{ backgroundColor: 'var(--bg-card)' }}>
+
+          <button className={styles.addAudioBtn} onClick={() => fileInputRef.current?.click()}>
             <Music size={16} /> Add Audio
           </button>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleAudioUpload} 
-            accept="audio/*" 
-            style={{ display: 'none' }} 
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAudioUpload}
+            accept="audio/*"
+            style={{ display: 'none' }}
           />
         </div>
 
         {/* Zoom Controls */}
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <button onClick={() => setPixelsPerSecond(p => Math.max(10, p - 10))} title="Zoom Out">
+        <div className={styles.zoomControls}>
+          <button className={styles.iconBtn} onClick={() => setPixelsPerSecond(p => Math.max(10, p - 10))} title="Zoom Out">
             <ZoomOut size={18} />
           </button>
-          <button onClick={() => setPixelsPerSecond(p => Math.min(100, p + 10))} title="Zoom In">
+          <button className={styles.iconBtn} onClick={() => setPixelsPerSecond(p => Math.min(100, p + 10))} title="Zoom In">
             <ZoomIn size={18} />
           </button>
         </div>
       </div>
-      
-      <div 
-        className="timeline-track-container" 
-        ref={trackRef} 
+
+      <div
+        className={`${styles.timelineTrackContainer} ${trackCursorClass}`}
+        ref={trackRef}
         onClick={handleTimelineClick}
         onMouseDown={handleTrackMouseDown}
         onMouseMove={handleTrackMouseMove}
         onMouseUp={handleTrackMouseUp}
         onMouseLeave={handleTrackMouseUp}
-        style={{ 
-          overflowY: 'hidden', 
-          overflowX: 'auto',
-          cursor: isSpacePressed ? (isPanning ? 'grabbing' : 'grab') : 'default'
-        }}
       >
-        <div style={{ position: 'relative', width: `${timelineDuration * pixelsPerSecond}px`, minHeight: '100%' }}>
-          
+        <div className={styles.timelineContent} style={{ width: `${timelineDuration * pixelsPerSecond}px` }}>
+
           {/* Ruler (Segundero) */}
-          <div style={{ height: '20px', position: 'relative', borderBottom: '1px solid var(--border-color)' }}>
+          <div className={styles.ruler}>
             {renderRuler()}
           </div>
 
           {/* Audio Track */}
-          <div style={{ 
-            height: '40px', 
-            position: 'relative', 
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            borderBottom: '1px solid var(--border-color)' 
-          }}>
+          <div className={styles.audioTrack}>
             <div id="waveform" ref={waveformRef} style={{ width: `${(duration || timelineDuration) * pixelsPerSecond}px` }} />
             {!duration && (
-              <span style={{ position: 'absolute', top: '10px', left: '10px', fontSize: '12px', color: 'var(--text-muted)'}}>
+              <span className={styles.audioEmpty}>
                 No Audio Track
               </span>
             )}
           </div>
 
           {/* Formations Track */}
-          <div className="timeline-track" style={{ height: '40px', marginTop: '10px' }}>
+          <div className={styles.formationsTrack}>
             {formations.map((form, index) => (
               <FormationBlock
                 key={form.id}
@@ -334,18 +321,9 @@ export function Timeline({
           </div>
 
           {/* Playhead indicator */}
-          <div 
-            className="playhead" 
-            style={{ 
-              position: 'absolute', 
-              left: `${currentTime * pixelsPerSecond}px`,
-              top: 0,
-              bottom: 0,
-              width: '2px',
-              backgroundColor: 'var(--accent-primary)',
-              zIndex: 20,
-              pointerEvents: 'none'
-            }} 
+          <div
+            className={styles.playhead}
+            style={{ left: `${currentTime * pixelsPerSecond}px` }}
           />
         </div>
       </div>

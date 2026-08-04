@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
-import type { Dancer, Shape } from '../types';
+import type { Dancer, Shape } from '../../types';
+import styles from './Sidebar.module.scss';
 
 interface SidebarProps {
   dancers: Dancer[];
@@ -58,61 +59,34 @@ function DancerEditPanel({
   return (
     <div
       ref={panelRef}
-      style={{
-        position: 'fixed',
-        left: '260px',
-        top: '60px',
-        zIndex: 100,
-        width: '220px',
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-color)',
-        borderRadius: '10px',
-        padding: '14px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-      }}
+      className={styles.editPanel}
     >
       {/* Name */}
-      <div style={{ marginBottom: '12px' }}>
-        <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>Name</label>
+      <div className={styles.field}>
+        <label className={styles.label}>Name</label>
         <input
           value={name}
           onChange={e => setName(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose(); }}
           autoFocus
-          style={{
-            width: '100%',
-            background: 'var(--bg-hover)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '6px',
-            padding: '6px 8px',
-            fontSize: '13px',
-            color: 'var(--text-primary)',
-            boxSizing: 'border-box'
-          }}
+          className={styles.nameInput}
         />
       </div>
 
       {/* Shape */}
-      <div style={{ marginBottom: '12px' }}>
-        <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>Shape</label>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      <div className={styles.field}>
+        <label className={styles.label}>Shape</label>
+        <div className={styles.shapeRow}>
           {SHAPE_OPTIONS.map(({ shape: s, label, Icon }) => (
             <button
               key={s}
               title={label}
               onClick={() => setShape(s)}
+              className={styles.shapeButton}
               style={{
-                flex: 1,
-                padding: '8px 0',
-                borderRadius: '6px',
                 border: `2px solid ${shape === s ? color : 'var(--border-color)'}`,
                 background: shape === s ? 'var(--bg-hover)' : 'transparent',
                 color: shape === s ? color : 'var(--text-muted)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s ease',
               }}
             >
               <Icon size={16} />
@@ -122,70 +96,52 @@ function DancerEditPanel({
       </div>
 
       {/* Color grid */}
-      <div style={{ marginBottom: '14px' }}>
-        <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>Color</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px' }}>
+      <div className={styles.field}>
+        <label className={styles.label}>Color</label>
+        <div className={styles.colorGrid}>
           {PRESET_COLORS.map(c => (
             <button
               key={c}
               onClick={() => setColor(c)}
+              className={styles.colorButton}
               style={{
-                width: '100%',
-                aspectRatio: '1',
-                borderRadius: '50%',
                 backgroundColor: c,
                 border: color === c ? '2px solid white' : '2px solid transparent',
                 outline: color === c ? '2px solid rgba(255,255,255,0.5)' : 'none',
-                cursor: 'pointer',
-                transition: 'transform 0.1s',
               }}
             />
           ))}
         </div>
         {/* Custom color picker */}
-        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={styles.customColorRow}>
           <input
             type="color"
             value={color}
             onChange={e => setColor(e.target.value)}
-            style={{ width: '32px', height: '32px', border: 'none', borderRadius: '6px', cursor: 'pointer', padding: 0, background: 'none' }}
+            className={styles.colorInput}
           />
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>{color}</span>
+          <span className={styles.hexValue}>{color}</span>
         </div>
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: '6px' }}>
+      <div className={styles.actions}>
         <button
           onClick={handleSave}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-            padding: '7px', borderRadius: '6px', fontSize: '12px',
-            background: 'var(--accent-primary)', color: 'white', border: 'none', cursor: 'pointer'
-          }}
+          className={styles.saveButton}
         >
           <Check size={14} /> Save
         </button>
         <button
           onClick={() => { onDelete(); onClose(); }}
-          style={{
-            padding: '7px 10px', borderRadius: '6px', fontSize: '12px',
-            background: 'rgba(244,67,54,0.15)', color: '#f44336',
-            border: '1px solid rgba(244,67,54,0.3)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
+          className={styles.deleteButton}
           title="Delete dancer"
         >
           <Trash2 size={14} />
         </button>
         <button
           onClick={onClose}
-          style={{
-            padding: '7px 10px', borderRadius: '6px', fontSize: '12px',
-            background: 'var(--bg-hover)', color: 'var(--text-secondary)',
-            border: '1px solid var(--border-color)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}
+          className={styles.cancelButton}
           title="Cancel"
         >
           <X size={14} />
@@ -211,23 +167,22 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
   };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarHeader}>
         <span>Performers</span>
-        <button className="add-dancer-btn" onClick={onAddDancer} title="Add Dancer">
+        <button className={styles.addDancerBtn} onClick={onAddDancer} title="Add Dancer">
           <Plus size={18} />
         </button>
       </div>
 
-      <div className="dancers-list">
+      <div className={styles.dancersList}>
         {dancers.map(dancer => (
           <div
             key={dancer.id}
-            style={{ position: 'relative' }}
+            className={styles.dancerRow}
           >
             <div
-              className={`dancer-item ${editingId === dancer.id ? 'active' : ''}`}
-              style={{ cursor: 'pointer', userSelect: 'none' }}
+              className={`${styles.dancerItem} ${editingId === dancer.id ? styles.isActive : ''}`}
               onClick={() => setEditingId(editingId === dancer.id ? null : dancer.id)}
             >
               <DancerShape dancer={dancer} />
