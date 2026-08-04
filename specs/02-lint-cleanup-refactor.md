@@ -1,6 +1,6 @@
 # SPEC 02 — Limpieza de lint: corregir los 13 problemas y endurecer el estándar
 
-**State:** Aprobado
+**State:** Implementado
 **Date:** 2026-08-04
 **Depends on:** —
 
