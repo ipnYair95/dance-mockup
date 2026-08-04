@@ -213,8 +213,8 @@
   left: 0;
   top: 0;
   bottom: 0;
-  background-color: rgba(33, 150, 243, 0.4); /* Blue overlay for transition */
-  border-right: 2px solid #2196F3;
+  background-color: rgba(124, 58, 237, 0.4); /* Violet overlay for transition */
+  border-right: 2px solid #7C3AED;
   z-index: 1;
 }
 
@@ -233,7 +233,7 @@
 }
 
 .playhead {
-  box-shadow: 0 0 5px rgba(233, 30, 99, 0.5); /* glow effect */
+  box-shadow: 0 0 5px rgba(124, 58, 237, 0.5); /* glow effect */
 }
 
 .add-dancer-btn {

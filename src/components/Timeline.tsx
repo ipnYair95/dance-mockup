@@ -58,8 +58,8 @@ export function Timeline({
     if (waveformRef.current && !wavesurfer.current) {
       wavesurfer.current = WaveSurfer.create({
         container: waveformRef.current,
-        waveColor: '#E91E63',
-        progressColor: '#D81B60',
+        waveColor: '#7C3AED',
+        progressColor: '#6D28D9',
         height: 40,
         barWidth: 2,
         barRadius: 2,

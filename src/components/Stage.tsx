@@ -146,8 +146,8 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
       {selectedIds.size > 1 && (
         <div style={{
           position: 'absolute', top: '10px', left: '10px', zIndex: 50,
-          background: 'rgba(33,150,243,0.15)', border: '1px solid rgba(33,150,243,0.5)',
-          borderRadius: '6px', padding: '4px 10px', fontSize: '12px', color: '#90CAF9',
+          background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.5)',
+          borderRadius: '6px', padding: '4px 10px', fontSize: '12px', color: '#C4B5FD',
         }}>
           {selectedIds.size} selected · drag any to move all
         </div>
