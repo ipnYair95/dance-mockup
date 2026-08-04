@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import type { Formation } from '../types';
+import type { Formation } from '../../types';
+import styles from './FormationBlock.module.scss';
 
 interface FormationBlockProps {
   formation: Formation;
@@ -94,28 +95,28 @@ export function FormationBlock({
 
   return (
     <div
-      className={`formation-block ${isActive ? 'active' : ''}`}
-      style={{ width: `${width}px`, flexShrink: 0 }}
+      className={`${styles.formationBlock} ${isActive ? styles.isActive : ''}`}
+      style={{ width: `${width}px` }}
       onClick={onSelect}
     >
-      <span style={{ position: 'relative', zIndex: 2, pointerEvents: 'none' }}>{formation.name}</span>
-      
+      <span className={styles.blockLabel}>{formation.name}</span>
+
       {/* Visual representation of transition time */}
-      <div 
-        className="transition-overlay"
+      <div
+        className={styles.transitionOverlay}
         style={{ width: `${transitionWidth}px` }}
       >
         {isActive && (
-          <div 
-            className="transition-resize-handle"
+          <div
+            className={styles.transitionResizeHandle}
             onMouseDown={handleTransitionMouseDown}
             title="Adjust transition time"
           />
         )}
       </div>
 
-      <div 
-        className="resize-handle"
+      <div
+        className={styles.resizeHandle}
         onMouseDown={handleDurationMouseDown}
         title="Adjust formation duration"
       />

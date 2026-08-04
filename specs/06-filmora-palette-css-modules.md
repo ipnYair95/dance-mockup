@@ -1,6 +1,6 @@
 # SPEC 06 — Paleta Filmora + estilos separados a CSS modules
 
-**State:** Aprobado
+**State:** Implementado
 **Date:** 2026-08-04
 **Depends on:** —
 

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import type { Dancer, DancerPosition } from '../types';
+import type { Dancer, DancerPosition } from '../../types';
+import styles from './DancerOnStage.module.scss';
 
 interface DancerOnStageProps {
   dancer: Dancer;
@@ -36,7 +37,8 @@ export function DancerOnStage({
 
   return (
     <motion.div
-      className="dancer-on-stage"
+      className={styles.dancerOnStage}
+      data-dancer
       drag
       dragConstraints={stageRef}
       dragElastic={0}
@@ -47,16 +49,6 @@ export function DancerOnStage({
       onDrag={(_, info) => onDrag(info.offset.x, info.offset.y)}
       onDragEnd={(_, info) => onDragEnd(info.offset.x, info.offset.y)}
       onClick={onClick}
-      style={{
-        position: 'absolute',
-        width: 30,
-        height: 30,
-        cursor: 'grab',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        userSelect: 'none',
-      }}
       whileDrag={{ scale: 1.15, cursor: 'grabbing', zIndex: 20 }}
       transition={
         transitionDuration === 0
@@ -64,7 +56,7 @@ export function DancerOnStage({
           : { type: 'tween', duration: transitionDuration, ease: 'easeInOut' }
       }
     >
-      <svg width="30" height="30" style={{ overflow: 'visible' }}>
+      <svg width="30" height="30" className={styles.shapeSvg}>
         {/* Selection ring */}
         {isSelected && (
           <circle
@@ -77,7 +69,7 @@ export function DancerOnStage({
           />
         )}
         {renderShape(dancer)}
-        <text x="15" y="-8" fill="white" fontSize="10" textAnchor="middle" style={{ pointerEvents: 'none' }}>
+        <text x="15" y="-8" fill="white" fontSize="10" textAnchor="middle" className={styles.dancerLabel}>
           {dancer.name}
         </text>
       </svg>

@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback } from 'react';
-import type { Dancer, DancerPosition, Formation } from '../types';
-import { DancerOnStage } from './DancerOnStage';
-import { useStageZoom } from '../hooks/useStageZoom';
+import type { Dancer, DancerPosition, Formation } from '../../types';
+import { DancerOnStage } from '../DancerOnStage/DancerOnStage';
+import { useStageZoom } from '../../hooks/useStageZoom';
+import styles from './Stage.module.scss';
 
 interface StageProps {
   dancers: Dancer[];
@@ -37,8 +38,8 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
   const handleAreaPointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
     // If clicking on a dancer or a button/interactive element, don't pan
-    if (target.closest('.dancer-on-stage') || target.closest('button') || target.closest('.zoom-controls')) return;
-    
+    if (target.closest('[data-dancer]') || target.closest('button') || target.closest('[data-zoom-controls]')) return;
+
     e.preventDefault();
     setIsPanning(true);
     panStartRef.current = { x: e.clientX, y: e.clientY };
@@ -116,63 +117,40 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
 
   return (
     <section
-      className="stage-area"
+      className={`${styles.stageArea} ${isPanning ? styles.panning : ''}`}
       ref={stageAreaRef}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: isPanning ? 'grabbing' : 'grab',
-      }}
       onPointerDown={handleAreaPointerDown}
       onPointerMove={handleAreaPointerMove}
       onPointerUp={handleAreaPointerUp}
     >
       {/* Zoom indicator + controls */}
-      <div className="zoom-controls" style={{
-        position: 'absolute', bottom: '10px', right: '10px', zIndex: 50,
-        display: 'flex', gap: '4px', alignItems: 'center',
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)',
-        borderRadius: '8px', padding: '4px 8px', border: '1px solid var(--border-color)',
-        pointerEvents: 'auto',
-      }}>
-        <button onClick={zoomOut} style={{ fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '4px' }}>−</button>
-        <span onClick={resetZoom} title="Click to reset" style={{ fontSize: '12px', minWidth: '42px', textAlign: 'center', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+      <div className={styles.zoomControls} data-zoom-controls>
+        <button onClick={zoomOut} className={styles.zoomBtn}>−</button>
+        <span onClick={resetZoom} title="Click to reset" className={styles.zoomPercent}>
           {zoomPercent}%
         </span>
-        <button onClick={zoomIn} style={{ fontSize: '16px', lineHeight: 1, padding: '2px 6px', borderRadius: '4px' }}>+</button>
+        <button onClick={zoomIn} className={styles.zoomBtn}>+</button>
       </div>
 
       {/* Selection count badge */}
       {selectedIds.size > 1 && (
-        <div style={{
-          position: 'absolute', top: '10px', left: '10px', zIndex: 50,
-          background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.5)',
-          borderRadius: '6px', padding: '4px 10px', fontSize: '12px', color: '#C4B5FD',
-        }}>
+        <div className={styles.selectionBadge}>
           {selectedIds.size} selected · drag any to move all
         </div>
       )}
 
-
-
       {/* Zoomed + panned stage wrapper */}
-      <div
-        style={{
-          width: '100%', height: '100%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
+      <div className={styles.stageCentered}>
         <div
+          className={styles.stageTransform}
           style={{
             transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
             transformOrigin: 'center center',
-            position: 'relative',
           }}
         >
           <div
-            className="stage"
+            className={styles.stage}
             ref={stageRef}
-            style={{ position: 'relative' }}
             onClick={() => setSelectedIds(new Set())}
           >
             {activeFormation.positions.map(pos => {
