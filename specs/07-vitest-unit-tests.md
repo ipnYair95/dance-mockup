@@ -1,6 +1,6 @@
 # SPEC 07 — Tests unitarios con Vitest + refactor a hooks por componente
 
-**State:** Approved
+**State:** Implemented
 **Date:** 2026-08-04
 **Depends on:** —
 

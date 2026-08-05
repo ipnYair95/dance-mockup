@@ -1,9 +1,10 @@
 import { Plus, Play, Pause, SkipBack, Music, ZoomIn, ZoomOut } from 'lucide-react';
 import type { Formation } from '../../types';
 import { FormationBlock } from '../FormationBlock/FormationBlock';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import styles from './Timeline.module.scss';
+import { useTimeline } from '../../hooks/useTimeline';
 
 interface TimelineProps {
   formations: Formation[];
@@ -39,21 +40,35 @@ export function Timeline({
   onDeleteFormation,
   clearSignal = 0
 }: TimelineProps) {
-  const [pixelsPerSecond, setPixelsPerSecond] = useState(30);
-  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set([currentFormationIndex]));
-  const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [isPanning, setIsPanning] = useState(false);
-  const panStartRef = useRef(0);
-  const scrollStartRef = useRef(0);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const waveformRef = useRef<HTMLDivElement>(null);
-  const wavesurfer = useRef<WaveSurfer | null>(null);
-
   // Total time needed for the timeline (either audio duration or sum of formations)
   const totalFormationsDuration = formations.reduce((acc, f) => acc + f.duration, 0);
   const timelineDuration = Math.max(duration || 0, totalFormationsDuration, 60); // min 60s
+
+  const {
+    pixelsPerSecond,
+    selectedIndices,
+    isSpacePressed,
+    isPanning,
+    trackRef,
+    zoomIn,
+    zoomOut,
+    handleTimelineClick,
+    handleTrackMouseDown,
+    handleTrackMouseMove,
+    handleTrackMouseUp,
+    selectFormation,
+    formatTime,
+  } = useTimeline({
+    formationsLength: formations.length,
+    currentFormationIndex,
+    timelineDuration,
+    onSeek,
+    onDeleteFormation,
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const waveformRef = useRef<HTMLDivElement>(null);
+  const wavesurfer = useRef<WaveSurfer | null>(null);
 
   useEffect(() => {
     if (waveformRef.current && !wavesurfer.current) {
@@ -78,35 +93,6 @@ export function Timeline({
       }
     };
   }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Space for panning
-      if (e.code === 'Space' && e.target === document.body) {
-        e.preventDefault();
-        setIsSpacePressed(true);
-      }
-      // Delete key for formation deletion
-      if ((e.code === 'Delete' || e.code === 'Backspace') && e.target === document.body) {
-        if (formations.length > 1) {
-          onDeleteFormation(Array.from(selectedIndices));
-          setSelectedIndices(new Set([Math.max(0, currentFormationIndex - 1)]));
-        }
-      }
-    };
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        setIsSpacePressed(false);
-        setIsPanning(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, [currentFormationIndex, formations.length, onDeleteFormation, selectedIndices]);
 
   const handleAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -141,73 +127,6 @@ export function Timeline({
       }
     }
   }, [clearSignal]);
-
-  const clampZoom = (v: number) => Math.min(150, Math.max(5, v));
-
-  // Shift+Scroll or Shift+=/- to zoom the timeline
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (!e.shiftKey) return;
-      e.preventDefault();
-      // Browsers often convert Shift+Vertical Scroll into Horizontal Scroll (deltaX)
-      const deltaVal = Math.abs(e.deltaY) > 0 ? e.deltaY : e.deltaX;
-      if (deltaVal === 0) return;
-
-      const delta = deltaVal > 0 ? -5 : 5;
-      setPixelsPerSecond(p => clampZoom(p + delta));
-    };
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (!e.shiftKey) return;
-      if (e.key === '=' || e.key === '+') { e.preventDefault(); setPixelsPerSecond(p => clampZoom(p + 5)); }
-      if (e.key === '-') { e.preventDefault(); setPixelsPerSecond(p => clampZoom(p - 5)); }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, []);
-
-  const formatTime = (time: number) => {
-    const mins = Math.floor(time / 60);
-    const secs = Math.floor(time % 60);
-    const ms = Math.floor((time % 1) * 10);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms}`;
-  };
-
-  const handleTimelineClick = (e: React.MouseEvent) => {
-    if (isSpacePressed) return; // Ignore click seek if we are panning
-    if (trackRef.current) {
-      const rect = trackRef.current.getBoundingClientRect();
-      const clickX = e.clientX - rect.left + trackRef.current.scrollLeft;
-      const clickedTime = clickX / pixelsPerSecond;
-      onSeek(Math.min(clickedTime, timelineDuration));
-    }
-  };
-
-  const handleTrackMouseDown = (e: React.MouseEvent) => {
-    if (isSpacePressed) {
-      setIsPanning(true);
-      panStartRef.current = e.clientX;
-      scrollStartRef.current = trackRef.current?.scrollLeft || 0;
-    }
-  };
-
-  const handleTrackMouseMove = (e: React.MouseEvent) => {
-    if (isPanning && trackRef.current) {
-      const delta = e.clientX - panStartRef.current;
-      trackRef.current.scrollLeft = scrollStartRef.current - delta;
-    }
-  };
-
-  const handleTrackMouseUp = () => {
-    setIsPanning(false);
-  };
 
   // Generate Ruler (Segundero) tick marks
   const renderRuler = () => {
@@ -257,10 +176,10 @@ export function Timeline({
 
         {/* Zoom Controls */}
         <div className={styles.zoomControls}>
-          <button className={styles.iconBtn} onClick={() => setPixelsPerSecond(p => Math.max(10, p - 10))} title="Zoom Out">
+          <button className={styles.iconBtn} onClick={zoomOut} title="Zoom Out">
             <ZoomOut size={18} />
           </button>
-          <button className={styles.iconBtn} onClick={() => setPixelsPerSecond(p => Math.min(100, p + 10))} title="Zoom In">
+          <button className={styles.iconBtn} onClick={zoomIn} title="Zoom In">
             <ZoomIn size={18} />
           </button>
         </div>
@@ -302,13 +221,8 @@ export function Timeline({
                 isActive={selectedIndices.has(index) || index === currentFormationIndex}
                 pixelsPerSecond={pixelsPerSecond}
                 onSelect={(e) => {
-                  if (e.shiftKey || e.metaKey || e.ctrlKey) {
-                    const newSet = new Set(selectedIndices);
-                    if (newSet.has(index)) newSet.delete(index);
-                    else newSet.add(index);
-                    setSelectedIndices(newSet);
-                  } else {
-                    setSelectedIndices(new Set([index]));
+                  selectFormation(index, e);
+                  if (!(e.shiftKey || e.metaKey || e.ctrlKey)) {
                     onSelectFormation(index);
                     const startTime = formations.slice(0, index).reduce((acc, f) => acc + f.duration, 0);
                     onSeek(startTime);
