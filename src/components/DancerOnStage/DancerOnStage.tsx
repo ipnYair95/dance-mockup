@@ -56,23 +56,28 @@ export function DancerOnStage({
           ? { duration: 0 }
           : { type: 'tween', duration: transitionDuration, ease: 'easeInOut' }
       }
+      style={{ color: dancer.color }}
     >
       <svg width="30" height="30" className={styles.shapeSvg}>
         {/* Selection ring */}
         {isSelected && (
           <circle
-            cx="15" cy="15" r="21"
+            cx="15" cy="15" r="20"
             fill="none"
             stroke="white"
-            strokeWidth="2"
-            strokeDasharray="5 3"
+            strokeWidth="1.5"
+            strokeDasharray="4 3"
             opacity="0.9"
           />
         )}
         {renderShape(dancer)}
-        <text x="15" y="-8" fill="white" fontSize="10" textAnchor="middle" className={styles.dancerLabel}>
-          {dancer.name}
-        </text>
+        {/* Label con fondo */}
+        <g transform="translate(15, 38)">
+          <rect x="-18" y="-7" width="36" height="12" className={styles.labelBg} />
+          <text textAnchor="middle" dy="2" className={styles.dancerLabel}>
+            {dancer.name}
+          </text>
+        </g>
       </svg>
     </motion.div>
   );

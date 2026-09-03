@@ -205,7 +205,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
     noteDragStartRef.current = null;
   }, [draggingNoteId, zoom, onUpdateNotePosition]);
 
-  const zoomPercent = Math.round(zoom * 100);
+  const zoomLabel = `×${zoom.toFixed(1)}`;
 
   return (
     <section
@@ -229,9 +229,13 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
         <span style={{ width: 1, height: 16, background: 'var(--border-color)', margin: '0 2px' }} />
         <button onClick={zoomOut} className={styles.zoomBtn}>−</button>
         <span onClick={resetZoom} title="Click to reset" className={styles.zoomPercent}>
-          {zoomPercent}%
+          {zoomLabel}
         </span>
         <button onClick={zoomIn} className={styles.zoomBtn}>+</button>
+      </div>
+
+      <div className={styles.formationBadge}>
+        F-{String(activeFormation.name.replace(/\D/g, '') || '01').padStart(2, '0')} — {activeFormation.name}
       </div>
 
       {/* Selection count badge */}

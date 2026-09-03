@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Check, X } from 'lucide-react';
 import type { Dancer, Shape } from '../../types';
 import styles from './Sidebar.module.scss';
 
@@ -172,14 +172,12 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
-        <span>Performers</span>
-        <button className={styles.addDancerBtn} onClick={onAddDancer} title="Add Dancer">
-          <Plus size={18} />
-        </button>
+        <span className={styles.headerLabel}>Performers</span>
+        <span className={styles.headerCount}>{dancers.length}</span>
       </div>
 
       <div className={styles.dancersList}>
-        {dancers.map(dancer => (
+        {dancers.map((dancer, idx) => (
           <div
             key={dancer.id}
             className={styles.dancerRow}
@@ -188,12 +186,21 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
               className={`${styles.dancerItem} ${editingId === dancer.id ? styles.isActive : ''}`}
               onClick={() => setEditingId(editingId === dancer.id ? null : dancer.id)}
             >
-              <DancerShape dancer={dancer} />
-              <span style={{ flex: 1, marginLeft: '8px', fontSize: '13px' }}>{dancer.name}</span>
-              <Pencil size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
+              <span className={styles.dancerDot} style={{ background: idx === 0 ? '#22d3ee' : 'var(--accent-primary)' }}>
+                {idx === 0 ? <span style={{ fontSize: 8 }}>★</span> : null}
+              </span>
+              <span className={styles.dancerName}>{dancer.name}</span>
+              <span className={styles.dancerShapeIcon}><DancerShape dancer={dancer} /></span>
             </div>
           </div>
         ))}
+      </div>
+
+      <div className={styles.sidebarFooter}>
+        <button className={styles.addDancerBtnFull} onClick={onAddDancer} title="Add Dancer" aria-label="Add Dancer">
+          <Plus size={12} /> Añadir performer
+        </button>
+        <span className={styles.dragHint}>Arrastra para reubicar</span>
       </div>
 
       {editingDancer && (

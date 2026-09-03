@@ -1,37 +1,30 @@
 .formationBlock {
-  background-color: var(--bg-main);
-  border: 1px solid var(--border-color);
-  border-left: none; /* remove double borders */
-  padding: 5px 15px;
-  font-size: 12px;
+  background-color: #1e1e32;
+  border: 1px solid #2a2a40;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
   transition: background-color 0.2s, border-color 0.2s;
-  position: relative; /* for absolute resize handle */
+  position: relative;
   overflow: hidden;
   flex-shrink: 0;
-
-  &:first-child {
-    border-left: 1px solid var(--border-color);
-    border-top-left-radius: 4px;
-    border-bottom-left-radius: 4px;
-  }
-
-  &:last-child {
-    border-top-right-radius: 4px;
-    border-bottom-right-radius: 4px;
-  }
+  border-radius: 6px;
+  color: var(--text-secondary);
 
   &:hover {
-    background-color: var(--bg-hover);
+    background-color: #252545;
+    border-color: var(--accent-primary);
   }
 
   &.isActive {
-    background-color: var(--bg-hover);
-    border-color: #FFFFFF;
+    background-color: #252545;
+    border-color: var(--accent-cyan);
     color: white;
-    z-index: 2; /* Bring active border above others */
+    z-index: 2;
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.2);
   }
 }
 

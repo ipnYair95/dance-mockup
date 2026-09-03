@@ -1,24 +1,24 @@
 .timeline {
-  height: 250px;
-  background-color: var(--bg-timeline);
+  height: 190px;
+  background-color: #0a0a0f;
   border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  padding: 10px 20px 14px;
+  padding: 10px 12px 14px;
 }
 
 .timelineControls {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .iconBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px;
+  padding: 4px;
   border-radius: 6px;
   color: var(--text-secondary);
   transition: background-color 0.15s, color 0.15s;
@@ -29,63 +29,112 @@
   }
 }
 
+.playBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--accent-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pauseBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .timeLabel {
-  font-size: 14px;
+  font-size: 12px;
   font-family: monospace;
-  min-width: 70px;
+  color: var(--accent-cyan);
+  min-width: auto;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.timeTotal {
+  color: var(--text-muted);
 }
 
 .actionBtns {
-  margin-left: 10px;
   display: flex;
-  gap: 10px;
+  gap: 6px;
+  margin-left: 8px;
 }
 
 .addFormationBtn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background-color: var(--bg-hover);
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 13px;
+  gap: 4px;
+  background-color: #1a1a2e;
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
   transition: background-color 0.2s;
 
   &:hover {
-    background-color: var(--bg-active);
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
   }
 }
 
 .addAudioBtn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  background-color: var(--bg-card);
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 13px;
+  gap: 4px;
+  background-color: #1a1a2e;
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
   transition: background-color 0.2s;
 
   &:hover {
     background-color: var(--bg-hover);
+    color: var(--text-primary);
   }
 }
 
 .zoomControls {
   margin-left: auto;
   display: flex;
-  gap: 5px;
+  gap: 2px;
   align-items: center;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.zoomLabel {
+  min-width: 36px;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
 .timelineTrackContainer {
   flex: 1;
   position: relative;
-  background-color: var(--bg-card);
-  border-radius: 4px;
+  background-color: #14141c;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 5px 0 10px;
+  padding: 6px 0 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 
@@ -107,62 +156,77 @@
 .timelineContent {
   position: relative;
   min-height: 100%;
+  padding-bottom: 14px;
 }
 
 .ruler {
-  height: 20px;
-  position: relative;
-  border-bottom: 1px solid var(--border-color);
+  height: 14px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
 }
 
 .rulerTick {
   position: absolute;
-  height: 100%;
-  border-left: 1px solid var(--border-color);
-  padding-left: 3px;
-  font-size: 10px;
+  top: 0;
+  font-size: 9px;
   color: var(--text-muted);
+  opacity: 0.7;
 }
 
 .audioTrack {
   height: 40px;
   position: relative;
-  background-color: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+
+  :global(#waveform) {
+    display: block;
+    height: 40px;
+    width: 100%;
+  }
 }
 
 .audioEmpty {
   position: absolute;
   top: 10px;
   left: 10px;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text-muted);
+  pointer-events: none;
 }
 
 .formationsTrack {
   display: flex;
-  height: 40px;
-  margin-top: 10px;
+  height: 32px;
+  margin-top: 6px;
   align-items: center;
   position: relative;
+  gap: 6px;
+  padding: 0 6px;
 }
 
 .notesTrack {
   position: relative;
-  height: 36px;
-  margin-top: 8px;
-  margin-bottom: 6px;
+  height: 28px;
+  margin-top: 6px;
+  margin-bottom: 14px;
   background: rgba(255,255,255,0.02);
-  border: 1px dashed rgba(124, 58, 237, 0.25);
+  border: 1px dashed rgba(124, 58, 237, 0.18);
   border-radius: 4px;
+  margin-left: 6px;
+  margin-right: 6px;
 }
 
 .notesEmpty {
   position: absolute;
-  left: 10px;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
   pointer-events: none;
 }
@@ -172,8 +236,22 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background-color: var(--accent-primary);
+  background-color: var(--accent-cyan);
   z-index: 20;
   pointer-events: none;
-  box-shadow: 0 0 5px rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 6px rgba(34, 211, 238, 0.6);
+}
+
+.playheadBadge {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent-cyan);
+  color: #0a0a0f;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
 }

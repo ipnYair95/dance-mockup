@@ -11,8 +11,17 @@
 
 .shapeSvg {
   overflow: visible;
+  filter: drop-shadow(0 0 8px currentColor);
 }
 
 .dancerLabel {
   pointer-events: none;
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--text-secondary);
+}
+
+.labelBg {
+  rx: 4;
+  fill: rgba(0,0,0,0.65);
 }

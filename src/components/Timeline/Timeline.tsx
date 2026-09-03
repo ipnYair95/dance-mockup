@@ -1,4 +1,4 @@
-import { Plus, Play, Pause, SkipBack, Music, ZoomIn, ZoomOut, StickyNote } from 'lucide-react';
+import { Plus, Play, Pause, SkipBack, StickyNote } from 'lucide-react';
 import type { Formation, Note } from '../../types';
 import { FormationBlock } from '../FormationBlock/FormationBlock';
 import { NoteBlock } from '../NoteBlock/NoteBlock';
@@ -117,10 +117,11 @@ export function Timeline({
     if (waveformRef.current && !wavesurfer.current) {
       wavesurfer.current = WaveSurfer.create({
         container: waveformRef.current,
-        waveColor: '#7C3AED',
-        progressColor: '#6D28D9',
+        waveColor: '#A78BFA',
+        progressColor: '#22d3ee',
         height: 40,
         barWidth: 2,
+        barGap: 1,
         barRadius: 2,
         cursorWidth: 0,
         interact: false,
@@ -170,11 +171,16 @@ export function Timeline({
 
   const renderRuler = () => {
     const ticks = [];
-    const numTicks = Math.ceil(timelineDuration);
-    for (let i = 0; i <= numTicks; i++) {
+    // cada 20s como en mock
+    const step = 20;
+    const num = Math.ceil(timelineDuration / step);
+    for (let i = 0; i <= num; i++) {
+      const sec = i * step;
+      const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+      const ss = String(sec % 60).padStart(2, '0');
       ticks.push(
-        <div key={i} className={styles.rulerTick} style={{ left: `${i * pixelsPerSecond}px` }}>
-          {i}s
+        <div key={sec} className={styles.rulerTick} style={{ left: `${sec * pixelsPerSecond}px` }}>
+          {mm}:{ss}
         </div>
       );
     }
@@ -185,28 +191,30 @@ export function Timeline({
     ? (isPanning ? styles.grabbing : styles.grab)
     : '';
 
+  const zoomPercent = Math.round((pixelsPerSecond / 40) * 100);
+
   return (
     <footer className={styles.timeline}>
       <div className={styles.timelineControls}>
-        <button className={styles.iconBtn} onClick={() => onSeek(0)} title="Jump to start"><SkipBack size={20} /></button>
-        <button className={styles.iconBtn} onClick={onTogglePlay} title={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+        <button className={styles.iconBtn} onClick={() => onSeek(0)} title="Jump to start"><SkipBack size={16} /></button>
+        <button className={isPlaying ? styles.pauseBtn : styles.playBtn} onClick={onTogglePlay} title={isPlaying ? 'Pause' : 'Play'}>
+          {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="white" style={{ marginLeft: 1 }} />}
         </button>
         <span className={styles.timeLabel}>
-          {formatTime(currentTime)}
+          {formatTime(currentTime)} <span className={styles.timeTotal}>/ {formatTime(duration || timelineDuration)}</span>
         </span>
 
         <div className={styles.actionBtns}>
-          <button className={styles.addFormationBtn} onClick={onAddFormation}>
-            <Plus size={16} /> New Formation
+          <button className={styles.addFormationBtn} onClick={onAddFormation} aria-label="New Formation">
+            <Plus size={10} /> Formación
           </button>
 
-          <button className={styles.addFormationBtn} onClick={() => onAddNote(currentTime)} title="Añadir nota en el playhead">
-            <StickyNote size={16} /> Add Note
+          <button className={styles.addFormationBtn} onClick={() => onAddNote(currentTime)} title="Añadir nota en el playhead" aria-label="Add Note">
+            <StickyNote size={10} /> Nota
           </button>
 
-          <button className={styles.addAudioBtn} onClick={() => fileInputRef.current?.click()}>
-            <Music size={16} /> Add Audio
+          <button className={styles.addAudioBtn} onClick={() => fileInputRef.current?.click()} aria-label="Add Audio">
+            <Plus size={10} /> Audio
           </button>
           <input
             type="file"
@@ -218,12 +226,9 @@ export function Timeline({
         </div>
 
         <div className={styles.zoomControls}>
-          <button className={styles.iconBtn} onClick={zoomOut} title="Zoom Out">
-            <ZoomOut size={18} />
-          </button>
-          <button className={styles.iconBtn} onClick={zoomIn} title="Zoom In">
-            <ZoomIn size={18} />
-          </button>
+          <button className={styles.iconBtn} onClick={zoomOut} title="Zoom Out">—</button>
+          <span className={styles.zoomLabel}>{zoomPercent}%</span>
+          <button className={styles.iconBtn} onClick={zoomIn} title="Zoom In">+</button>
         </div>
       </div>
 
@@ -237,10 +242,6 @@ export function Timeline({
         onMouseLeave={handleTrackMouseUp}
       >
         <div className={styles.timelineContent} style={{ width: `${timelineDuration * pixelsPerSecond}px` }}>
-
-          <div className={styles.ruler}>
-            {renderRuler()}
-          </div>
 
           <div className={styles.audioTrack}>
             <div id="waveform" ref={waveformRef} style={{ width: `${(duration || timelineDuration) * pixelsPerSecond}px` }} />
@@ -296,7 +297,12 @@ export function Timeline({
           <div
             className={styles.playhead}
             style={{ left: `${currentTime * pixelsPerSecond}px` }}
-          />
+          >
+            <span className={styles.playheadBadge}>{currentTime.toFixed(1)}</span>
+          </div>
+          <div className={styles.ruler}>
+            {renderRuler()}
+          </div>
         </div>
       </div>
     </footer>

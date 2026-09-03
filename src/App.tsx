@@ -1,4 +1,4 @@
-import { Footprints, Download, Upload, HardDrive, Loader2, CheckCircle2, Plus, HelpCircle } from 'lucide-react';
+import { Diamond, Loader2, CheckCircle2, HelpCircle } from 'lucide-react';
 import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS, DEFAULT_NOTES } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
 import { useAutoSave, saveProjectName, loadProjectName } from './hooks/useAutoSave';
@@ -29,7 +29,7 @@ function App() {
     notes: danceState.notes,
   }), [danceState.dancers, danceState.formations, danceState.notes]);
 
-  const { pickSaveFile, loadFromLocalStorage, clearFileTarget, saveStatus, mode, hasFileSystemAPI } = useAutoSave(projectData);
+  const { pickSaveFile, loadFromLocalStorage, clearFileTarget, saveStatus, hasFileSystemAPI } = useAutoSave(projectData);
 
   // On first load, restore from localStorage if it differs from the defaults
   useEffect(() => {
@@ -52,9 +52,9 @@ function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const saveLabel = saveStatus === 'saving' ? 'Saving…'
-    : saveStatus === 'saved' ? (mode === 'file' ? 'File Sync' : 'Auto-Saved')
-    : (mode === 'file' ? 'File Sync' : 'Auto-Save');
+  const saveLabel = saveStatus === 'saving' ? 'Guardando…'
+    : saveStatus === 'saved' ? 'Guardado automático'
+    : 'Guardado automático';
 
   const handleExport = async () => {
     const safeName = projectName.trim().replace(/[^a-z0-9_\-\s]/gi, '').trim() || 'dance-project';
@@ -146,10 +146,11 @@ function App() {
       {/* Top Bar */}
       <header className="top-bar">
         <div className="top-bar-left">
-          <Footprints size={22} color="var(--accent-primary)" />
-          <div className="top-bar-title">
-            DanceForm
-          </div>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 7, background: 'rgba(124,58,237,0.18)', border: '1px solid rgba(124,58,237,0.35)' }}>
+            <Diamond size={13} color="#A78BFA" fill="rgba(124,58,237,0.3)" />
+          </span>
+          <div className="top-bar-title">DanceForm</div>
+          <span className="separator">/</span>
           {isEditingName ? (
             <input
               ref={nameInputRef}
@@ -161,44 +162,43 @@ function App() {
               className="project-name-input"
             />
           ) : (
-            <span
+            <button
               onClick={() => setIsEditingName(true)}
               title="Click to rename"
-              className="project-name-span"
+              className="breadcrumb-pill"
             >
-              {projectName}
-            </span>
+              Entrada <span style={{ color: 'var(--text-muted)' }}>—</span> <strong>{projectName}</strong>
+            </button>
           )}
         </div>
 
         <div className="top-bar-right">
-          {/* Auto-Save button — always visible */}
           <button
             className={`autosave-btn ${saveStatus === 'saved' ? 'is-saved' : ''} ${!hasFileSystemAPI ? 'is-static' : ''}`}
             onClick={hasFileSystemAPI ? () => pickSaveFile() : undefined}
             title={hasFileSystemAPI ? 'Click to set a local file target' : 'Auto-saving to browser storage'}
           >
             {saveStatus === 'saving' || isImporting ? (
-              <Loader2 size={16} className="spin" />
+              <Loader2 size={12} className="spin" />
             ) : saveStatus === 'saved' ? (
-              <CheckCircle2 size={16} />
+              <CheckCircle2 size={12} />
             ) : (
-              <HardDrive size={16} />
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--accent-cyan)', display: 'inline-block' }} />
             )}
             {isImporting ? 'Loading…' : saveLabel}
           </button>
 
           <button className="icon-btn" onClick={() => projectInputRef.current?.click()} title="Import Project">
-            <Upload size={18} /> Import
+            Importar
           </button>
           <input type="file" ref={projectInputRef} onChange={handleImport} accept=".json" style={{ display: 'none' }} />
 
           <button className="icon-btn" onClick={handleExport} title="Export snapshot">
-            <Download size={18} /> Export
+            Exportar
           </button>
 
-          <button className="icon-btn" onClick={() => setIsConfirmOpen(true)} title="Start a new project">
-            <Plus size={18} /> New
+          <button className="icon-btn primary" onClick={() => setIsConfirmOpen(true)} title="Start a new project">
+            Nuevo
           </button>
 
           <div className="help-wrapper" title="Shortcuts">

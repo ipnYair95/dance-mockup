@@ -1,19 +1,20 @@
 :root {
-  --bg-main: #1E1E24;
-  --bg-sidebar: #25252B;
-  --bg-timeline: #23232B;
-  --bg-card: #2F2F37;
-  --bg-hover: #393945;
-  --bg-active: #444454;
+  --bg-main: #0a0a0f;
+  --bg-sidebar: #1a1a2e;
+  --bg-timeline: #0f0f1a;
+  --bg-card: #1e1e32;
+  --bg-hover: #252545;
+  --bg-active: #2d2d4a;
 
   --text-primary: #FFFFFF;
   --text-secondary: #C2C2CC;
   --text-muted: #9A9AA8;
 
-  --accent-primary: #7C3AED; /* Filmora violet accent */
+  --accent-primary: #7C3AED;
   --accent-hover: #6D28D9;
+  --accent-cyan: #22d3ee;
 
-  --border-color: #40404A;
+  --border-color: #2a2a40;
   --border-radius: 8px;
   
   --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
