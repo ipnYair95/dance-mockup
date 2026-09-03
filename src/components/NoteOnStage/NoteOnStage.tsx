@@ -1,7 +1,14 @@
+import { useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GripVertical } from 'lucide-react';
 import type { Note } from '../../types';
 import styles from './NoteOnStage.module.scss';
+
+function autoResize(el: HTMLTextAreaElement | null) {
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+}
 
 interface NoteOnStageProps {
   note: Note;
@@ -17,6 +24,11 @@ interface NoteOnStageProps {
 export function NoteOnStage({ note, isVisible, isSelected, isDragging = false, dragOffset = { x: 0, y: 0 }, onPointerDown, onClick, onTextChange }: NoteOnStageProps) {
   const x = note.x + (isDragging ? dragOffset.x : 0);
   const y = note.y + (isDragging ? dragOffset.y : 0);
+  const textRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    autoResize(textRef.current);
+  }, [note.text]);
 
   return (
     <AnimatePresence>
@@ -42,10 +54,13 @@ export function NoteOnStage({ note, isVisible, isSelected, isDragging = false, d
           >
             <GripVertical size={14} />
           </button>
-          <input
+          <textarea
+            ref={textRef}
             className={styles.noteInput}
+            rows={1}
             value={note.text}
             onChange={e => onTextChange(e.target.value)}
+            onInput={e => autoResize(e.currentTarget)}
             onClick={e => e.stopPropagation()}
             onPointerDown={e => e.stopPropagation()}
             placeholder="Nota…"

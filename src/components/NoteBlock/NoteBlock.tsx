@@ -15,6 +15,7 @@ interface NoteBlockProps {
 
 export function NoteBlock({
   note,
+  index,
   isActive,
   pixelsPerSecond,
   onSelect,
@@ -36,7 +37,6 @@ export function NoteBlock({
   }, [editText, note.text, onTextChange]);
 
   const handleMoveMouseDown = useCallback((e: React.MouseEvent) => {
-    // No iniciar drag si se hace click en el handle de resize
     if ((e.target as HTMLElement).closest(`.${styles.resizeHandle}`)) return;
     e.stopPropagation();
     dragRef.current = { startX: e.clientX, startStart: note.startTime, startDuration: note.duration, mode: 'move' };
@@ -97,7 +97,7 @@ export function NoteBlock({
           className={styles.noteEditInput}
         />
       ) : (
-        <span className={styles.noteLabel}>{note.text}</span>
+        <span className={styles.noteLabel}>Note {index + 1}</span>
       )}
       <div
         className={styles.resizeHandle}
