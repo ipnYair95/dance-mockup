@@ -1,6 +1,6 @@
 import type { Dancer, DancerPosition, Formation, Shape } from '../types';
 
-const SHAPES: Shape[] = ['circle', 'square', 'triangle'];
+const SHAPES: Shape[] = ['circle', 'square', 'triangle', 'star'];
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);

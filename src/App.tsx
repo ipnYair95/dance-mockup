@@ -1,4 +1,4 @@
-import { Footprints, Download, Upload, HardDrive, Loader2, CheckCircle2, Plus } from 'lucide-react';
+import { Footprints, Download, Upload, HardDrive, Loader2, CheckCircle2, Plus, HelpCircle } from 'lucide-react';
 import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
 import { useAutoSave, saveProjectName, loadProjectName } from './hooks/useAutoSave';
@@ -190,6 +190,32 @@ function App() {
           <button className="icon-btn" onClick={() => setIsConfirmOpen(true)} title="Start a new project">
             <Plus size={18} /> New
           </button>
+
+          <div className="help-wrapper" title="Shortcuts">
+            <button className="help-btn" aria-label="Shortcuts help">
+              <HelpCircle size={18} />
+            </button>
+            <div className="help-tooltip">
+              <div className="help-title">Atajos</div>
+
+              <div className="help-group">Stage</div>
+              <div className="help-row"><span>Zoom</span><span>Ctrl/Cmd + rueda  •  Ctrl/Cmd + +/-/0</span></div>
+              <div className="help-row"><span>Pan</span><span>Arrastrar área vacía</span></div>
+              <div className="help-row"><span>Seleccionar</span><span>Click  •  Shift/Ctrl/Cmd + click (multi)</span></div>
+              <div className="help-row"><span>Mover selección</span><span>Arrastrar cualquiera</span></div>
+              <div className="help-row"><span>Snap grid</span><span>Automático al soltar</span></div>
+
+              <div className="help-group">Timeline</div>
+              <div className="help-row"><span>Zoom</span><span>Shift + rueda  •  Shift + +/-</span></div>
+              <div className="help-row"><span>Pan</span><span>Space + arrastrar</span></div>
+              <div className="help-row"><span>Seek</span><span>Click en la pista</span></div>
+              <div className="help-row"><span>Seleccionar formación</span><span>Click  •  Shift/Ctrl/Cmd + click (multi)</span></div>
+              <div className="help-row"><span>Borrar</span><span>Supr / Retroceso</span></div>
+
+              <div className="help-group">General</div>
+              <div className="help-row"><span>Deshacer / Rehacer</span><span>Ctrl/Cmd+Z  •  Ctrl+Shift+Z / Ctrl+Y</span></div>
+            </div>
+          </div>
         </div>
       </header>
 

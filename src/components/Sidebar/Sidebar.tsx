@@ -21,6 +21,7 @@ const SHAPE_OPTIONS: { shape: Shape; label: string; Icon: React.FC<{ size: numbe
   { shape: 'circle', label: 'Circle', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" /></svg> },
   { shape: 'square', label: 'Square', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2" fill="currentColor" /></svg> },
   { shape: 'triangle', label: 'Triangle', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="currentColor" /></svg> },
+  { shape: 'star', label: 'Star', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><polygon points="12,1.2 15.53,7.15 22.27,8.66 17.71,13.85 18.35,20.74 12,18 5.65,20.74 6.29,13.85 1.73,8.66 8.47,7.15" fill="currentColor" /></svg> },
 ];
 
 function DancerEditPanel({
@@ -161,6 +162,8 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
         return <svg width="14" height="14" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2" fill={dancer.color} /></svg>;
       case 'triangle':
         return <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill={dancer.color} /></svg>;
+      case 'star':
+        return <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="12,1.2 15.53,7.15 22.27,8.66 17.71,13.85 18.35,20.74 12,18 5.65,20.74 6.29,13.85 1.73,8.66 8.47,7.15" fill={dancer.color} /></svg>;
       default:
         return <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill={dancer.color} /></svg>;
     }

@@ -1,4 +1,4 @@
-export type Shape = 'circle' | 'square' | 'triangle';
+export type Shape = 'circle' | 'square' | 'triangle' | 'star';
 
 export interface Dancer {
   id: string;

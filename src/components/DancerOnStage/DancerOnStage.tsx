@@ -31,6 +31,7 @@ export function DancerOnStage({
     switch (d.shape) {
       case 'square':   return <rect width="30" height="30" fill={d.color} rx="2" />;
       case 'triangle': return <polygon points="15,0 30,30 0,30" fill={d.color} />;
+      case 'star':     return <polygon points="15,1.5 19.41,8.93 27.84,10.83 22.13,17.32 22.94,25.92 15,22.5 7.06,25.92 7.87,17.32 2.16,10.83 10.59,8.93" fill={d.color} />;
       default:         return <circle cx="15" cy="15" r="15" fill={d.color} />;
     }
   };
