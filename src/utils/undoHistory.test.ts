@@ -5,6 +5,7 @@ import { createUndoStack, pushUndo, undoStack, redoStack, resetStack, canUndo, c
 const snap = (n: number): Snapshot => ({
   dancers: [],
   formations: [{ id: `f${n}`, name: `Formation ${n}`, duration: 5, transitionDuration: 1, positions: [] }],
+  notes: [],
 });
 
 describe('undoHistory', () => {

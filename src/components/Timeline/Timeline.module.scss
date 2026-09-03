@@ -1,10 +1,10 @@
 .timeline {
-  height: 220px;
+  height: 250px;
   background-color: var(--bg-timeline);
   border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  padding: 10px 20px;
+  padding: 10px 20px 14px;
 }
 
 .timelineControls {
@@ -85,7 +85,7 @@
   border-radius: 4px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 5px 0;
+  padding: 5px 0 10px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 
@@ -145,6 +145,26 @@
   margin-top: 10px;
   align-items: center;
   position: relative;
+}
+
+.notesTrack {
+  position: relative;
+  height: 36px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(124, 58, 237, 0.25);
+  border-radius: 4px;
+}
+
+.notesEmpty {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 .playhead {

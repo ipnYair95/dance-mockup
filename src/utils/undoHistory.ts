@@ -1,8 +1,9 @@
-import type { Dancer, Formation } from '../types';
+import type { Dancer, Formation, Note } from '../types';
 
 export interface Snapshot {
   dancers: Dancer[];
   formations: Formation[];
+  notes: Note[];
 }
 
 export interface UndoStack {

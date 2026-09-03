@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback } from 'react';
 import { Lock, Unlock } from 'lucide-react';
-import type { Dancer, DancerPosition, Formation } from '../../types';
+import type { Dancer, DancerPosition, Formation, Note } from '../../types';
 import { DancerOnStage } from '../DancerOnStage/DancerOnStage';
+import { NoteOnStage } from '../NoteOnStage/NoteOnStage';
 import { useStageZoom } from '../../hooks/useStageZoom';
 import { STAGE_WIDTH, STAGE_HEIGHT } from '../../hooks/useDanceState';
 import styles from './Stage.module.scss';
@@ -30,9 +31,14 @@ interface StageProps {
   activeFormation: Formation;
   onUpdateDancerPosition: (dancerId: string, x: number, y: number) => void;
   onUpdateMultiplePositions?: (positions: { dancerId: string; x: number; y: number }[]) => void;
+  notes?: Note[];
+  currentTime?: number;
+  isPlaying?: boolean;
+  onUpdateNotePosition?: (id: string, x: number, y: number) => void;
+  onUpdateNoteText?: (id: string, text: string) => void;
 }
 
-export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpdateMultiplePositions }: StageProps) {
+export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpdateMultiplePositions, notes = [], currentTime = 0, isPlaying = false, onUpdateNotePosition, onUpdateNoteText }: StageProps) {
   const stageAreaRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const { zoom, zoomIn, zoomOut, resetZoom } = useStageZoom(stageAreaRef);
@@ -40,6 +46,12 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
 
   // ── Selection ────────────────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  // ── Note drag (libre: dentro o fuera del canvas, compensa zoom) ─────────────
+  const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
+  const [noteDragOffset, setNoteDragOffset] = useState({ x: 0, y: 0 });
+  const noteDragStartRef = useRef<{ x: number; y: number; noteX: number; noteY: number } | null>(null);
 
 
   // ── Panning ──────────────────────────────────────────────────────────────────
@@ -60,8 +72,8 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
   const handleAreaPointerDown = (e: React.PointerEvent) => {
     if (isLocked) return;
     const target = e.target as HTMLElement;
-    // If clicking on a dancer or a button/interactive element, don't pan
-    if (target.closest('[data-dancer]') || target.closest('button') || target.closest('[data-zoom-controls]')) return;
+    // Si el click es en dancer/nota (o su handle/input/button), no hacer pan
+    if (target.closest('[data-dancer]') || target.closest('[data-note]') || target.closest('[data-drag-handle]') || target.closest('button') || target.closest('[data-zoom-controls]') || target.closest('input')) return;
 
     e.preventDefault();
     setIsPanning(true);
@@ -160,6 +172,39 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
     }
   }, []);
 
+  // ── Note drag handlers (sin constraints, corrige zoom) ───────────────────────
+  const handleNotePointerDown = useCallback((e: React.PointerEvent, note: Note) => {
+    if (isLocked) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setSelectedNoteId(note.id);
+    setDraggingNoteId(note.id);
+    setNoteDragOffset({ x: 0, y: 0 });
+    noteDragStartRef.current = { x: e.clientX, y: e.clientY, noteX: note.x, noteY: note.y };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, [isLocked]);
+
+  const handleNotePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!draggingNoteId || !noteDragStartRef.current) return;
+    const dx = (e.clientX - noteDragStartRef.current.x) / zoom;
+    const dy = (e.clientY - noteDragStartRef.current.y) / zoom;
+    setNoteDragOffset({ x: dx, y: dy });
+  }, [draggingNoteId, zoom]);
+
+  const handleNotePointerUp = useCallback((e: React.PointerEvent) => {
+    if (!draggingNoteId || !noteDragStartRef.current) return;
+    const dx = (e.clientX - noteDragStartRef.current.x) / zoom;
+    const dy = (e.clientY - noteDragStartRef.current.y) / zoom;
+    const start = noteDragStartRef.current;
+    // Solo commitea si hubo movimiento significativo
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+      onUpdateNotePosition?.(draggingNoteId, start.noteX + dx, start.noteY + dy);
+    }
+    setDraggingNoteId(null);
+    setNoteDragOffset({ x: 0, y: 0 });
+    noteDragStartRef.current = null;
+  }, [draggingNoteId, zoom, onUpdateNotePosition]);
+
   const zoomPercent = Math.round(zoom * 100);
 
   return (
@@ -167,8 +212,8 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
       className={`${styles.stageArea} ${isPanning ? styles.panning : ''} ${isLocked ? styles.locked : ''}`}
       ref={stageAreaRef}
       onPointerDown={handleAreaPointerDown}
-      onPointerMove={handleAreaPointerMove}
-      onPointerUp={handleAreaPointerUp}
+      onPointerMove={(e) => { handleAreaPointerMove(e); handleNotePointerMove(e); }}
+      onPointerUp={(e) => { handleAreaPointerUp(); handleNotePointerUp(e); }}
     >
       {/* Zoom indicator + controls */}
       <div className={styles.zoomControls} data-zoom-controls>
@@ -232,7 +277,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
           <div
             className={styles.stage}
             ref={stageRef}
-            onClick={() => setSelectedIds(new Set())}
+            onClick={() => { setSelectedIds(new Set()); setSelectedNoteId(null); }}
           >
             {activeFormation.positions.map(pos => {
               const { dancerId } = pos;
@@ -263,6 +308,31 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
               );
             })}
           </div>
+
+          {/* Notas: posicionamiento libre dentro o fuera del canvas */}
+          {notes.map(note => {
+            const inRange = currentTime >= note.startTime && currentTime < note.startTime + note.duration;
+            const isVisible = isPlaying ? inRange : true;
+            const isDimmed = !inRange && !isPlaying;
+            const isDragging = draggingNoteId === note.id;
+            return (
+              <div key={note.id} style={{ opacity: isDimmed ? 0.45 : 1, pointerEvents: isVisible ? 'auto' : 'none' }}>
+                <NoteOnStage
+                  note={note}
+                  isVisible={isVisible}
+                  isSelected={selectedNoteId === note.id}
+                  isDragging={isDragging}
+                  dragOffset={isDragging ? noteDragOffset : { x: 0, y: 0 }}
+                  onPointerDown={(e) => handleNotePointerDown(e, note)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedNoteId(note.id);
+                  }}
+                  onTextChange={(text) => onUpdateNoteText?.(note.id, text)}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

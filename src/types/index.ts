@@ -20,3 +20,12 @@ export interface Formation {
   transitionDuration: number; // transition time in seconds
   positions: DancerPosition[];
 }
+
+export interface Note {
+  id: string;
+  text: string;
+  startTime: number; // seconds on timeline
+  duration: number; // seconds
+  x: number;
+  y: number;
+}

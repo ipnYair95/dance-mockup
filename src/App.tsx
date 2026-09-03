@@ -1,5 +1,5 @@
 import { Footprints, Download, Upload, HardDrive, Loader2, CheckCircle2, Plus, HelpCircle } from 'lucide-react';
-import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS } from './hooks/useDanceState';
+import { useDanceState, DEFAULT_DANCERS, DEFAULT_FORMATIONS, DEFAULT_NOTES } from './hooks/useDanceState';
 import { useAudio } from './hooks/useAudio';
 import { useAutoSave, saveProjectName, loadProjectName } from './hooks/useAutoSave';
 import { Sidebar } from './components/Sidebar/Sidebar';
@@ -26,7 +26,8 @@ function App() {
   const projectData = useMemo(() => ({
     dancers: danceState.dancers,
     formations: danceState.formations,
-  }), [danceState.dancers, danceState.formations]);
+    notes: danceState.notes,
+  }), [danceState.dancers, danceState.formations, danceState.notes]);
 
   const { pickSaveFile, loadFromLocalStorage, clearFileTarget, saveStatus, mode, hasFileSystemAPI } = useAutoSave(projectData);
 
@@ -34,9 +35,18 @@ function App() {
   useEffect(() => {
     const saved = loadFromLocalStorage();
     if (saved) {
-      const isDefault = JSON.stringify(saved) === JSON.stringify({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
-      if (!isDefault) {
-        danceState.loadProject(saved.dancers, saved.formations);
+      const isDefault = JSON.stringify(saved) === JSON.stringify({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS, notes: DEFAULT_NOTES });
+      // compat: proyectos viejos sin notes
+      const savedNotes = (saved as unknown as { notes?: unknown[] }).notes as never[] | undefined;
+      const notesForLoad = savedNotes ?? DEFAULT_NOTES;
+      const savedWithNotes = { ...saved, notes: notesForLoad };
+      const isDefaultLegacy = JSON.stringify(saved) === JSON.stringify({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
+      if (!isDefault && !isDefaultLegacy) {
+        danceState.loadProject(saved.dancers, saved.formations, savedWithNotes.notes ?? []);
+      } else if (!isDefaultLegacy && isDefault) {
+        // ya es default completo
+      } else if (savedWithNotes.notes.length) {
+        danceState.loadProject(saved.dancers, saved.formations, savedWithNotes.notes);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,7 +99,7 @@ function App() {
         const data = JSON.parse(event.target?.result as string);
         const project = validateProject(data);
         if (project) {
-          danceState.loadProject(project.dancers, project.formations);
+          danceState.loadProject(project.dancers, project.formations, project.notes);
           const importedName = file.name.replace(/\.json$/i, '').trim();
           const name = importedName || 'Untitled Dance';
           setProjectName(name);
@@ -233,6 +243,11 @@ function App() {
           activeFormation={danceState.activeFormation}
           onUpdateDancerPosition={danceState.updateDancerPosition}
           onUpdateMultiplePositions={danceState.updateMultipleDancerPositions}
+          notes={danceState.notes}
+          currentTime={audio.currentTime}
+          isPlaying={audio.isPlaying}
+          onUpdateNotePosition={danceState.updateNotePosition}
+          onUpdateNoteText={(id, text) => danceState.updateNote(id, { text })}
         />
       </main>
 
@@ -244,6 +259,12 @@ function App() {
         onDurationChange={danceState.updateFormationDuration}
         onTransitionChange={danceState.updateTransitionDuration}
         onDeleteFormation={danceState.deleteFormation}
+        notes={danceState.notes}
+        onAddNote={(start) => danceState.addNote(start ?? audio.currentTime)}
+        onUpdateNoteDuration={danceState.updateNoteDuration}
+        onUpdateNoteStartTime={danceState.updateNoteStartTime}
+        onUpdateNoteText={(id, text) => danceState.updateNote(id, { text })}
+        onDeleteNotes={danceState.deleteNotes}
 
         isPlaying={audio.isPlaying}
         currentTime={audio.currentTime}

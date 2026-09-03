@@ -44,6 +44,9 @@ vi.mock('../FormationBlock/FormationBlock', () => ({
     </div>
   ),
 }));
+vi.mock('../NoteBlock/NoteBlock', () => ({
+  NoteBlock: ({ note }: { note: { text: string } }) => <div data-testid="note-block">{note.text}</div>,
+}));
 
 import { Timeline } from './Timeline';
 
@@ -59,6 +62,12 @@ const setup = (overrides: Partial<Parameters<typeof Timeline>[0]> = {}) => {
     onSelectFormation: vi.fn(),
     onDurationChange: vi.fn(),
     onTransitionChange: vi.fn(),
+    notes: [],
+    onAddNote: vi.fn(),
+    onUpdateNoteDuration: vi.fn(),
+    onUpdateNoteStartTime: vi.fn(),
+    onUpdateNoteText: vi.fn(),
+    onDeleteNotes: vi.fn(),
     isPlaying: false,
     currentTime: 0,
     duration: 0,

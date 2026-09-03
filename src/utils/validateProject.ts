@@ -1,4 +1,4 @@
-import type { Dancer, DancerPosition, Formation, Shape } from '../types';
+import type { Dancer, DancerPosition, Formation, Note, Shape } from '../types';
 
 const SHAPES: Shape[] = ['circle', 'square', 'triangle', 'star'];
 
@@ -26,9 +26,21 @@ const isFormation = (value: unknown): value is Formation =>
   Array.isArray(value.positions) &&
   value.positions.every(isDancerPosition);
 
-export function validateProject(data: unknown): { dancers: Dancer[]; formations: Formation[] } | null {
+const isNote = (value: unknown): value is Note =>
+  isRecord(value) &&
+  isString(value.id) &&
+  isString(value.text) &&
+  isNumber(value.startTime) &&
+  isNumber(value.duration) &&
+  isNumber(value.x) &&
+  isNumber(value.y);
+
+export function validateProject(data: unknown): { dancers: Dancer[]; formations: Formation[]; notes: Note[] } | null {
   if (!isRecord(data)) return null;
   if (!Array.isArray(data.dancers) || !data.dancers.every(isDancer)) return null;
   if (!Array.isArray(data.formations) || !data.formations.every(isFormation)) return null;
-  return { dancers: data.dancers as Dancer[], formations: data.formations as Formation[] };
+  // notes es opcional para compatibilidad con proyectos antiguos
+  if (data.notes !== undefined && (!Array.isArray(data.notes) || !data.notes.every(isNote))) return null;
+  const notes = Array.isArray(data.notes) ? (data.notes as Note[]) : [];
+  return { dancers: data.dancers as Dancer[], formations: data.formations as Formation[], notes };
 }

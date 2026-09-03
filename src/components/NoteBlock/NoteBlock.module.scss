@@ -1,0 +1,66 @@
+.noteBlock {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: rgba(124, 58, 237, 0.22);
+  border: 1px solid rgba(124, 58, 237, 0.5);
+  border-radius: 4px;
+  cursor: grab;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+  z-index: 1;
+
+  &:hover {
+    background: rgba(124, 58, 237, 0.32);
+  }
+
+  &.isActive {
+    background: rgba(124, 58, 237, 0.4);
+    border-color: #A78BFA;
+    z-index: 2;
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.noteLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  color: #E9D5FF;
+}
+
+.noteEditInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--accent-primary);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  cursor: ew-resize;
+  background: rgba(255,255,255,0.08);
+  border-left: 1px solid rgba(255,255,255,0.15);
+
+  &:hover {
+    background: rgba(255,255,255,0.2);
+  }
+}

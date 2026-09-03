@@ -1,9 +1,10 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import type { Dancer, Formation } from '../types';
+import type { Dancer, Formation, Note } from '../types';
 
 interface ProjectData {
   dancers: Dancer[];
   formations: Formation[];
+  notes: Note[];
 }
 
 interface SaveFilePickerOptions {
