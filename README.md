@@ -1,75 +1,44 @@
-# React + TypeScript + Vite
+# DanceForm
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Choreography mockup editor — place dancers on a stage across timed formations, with audio playback and autosave. Single-page app: `src/main.tsx` → `src/App.tsx`.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Vite + React 19 + TypeScript · SCSS Modules · `wavesurfer.js` (waveform only) · Vitest + Testing Library + jsdom
 
-## React Compiler
+## Commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # Vite dev server
+npm run build    # tsc -b && vite build
+npm run lint     # eslint --max-warnings 0
+npm run test     # vitest run
+npm run preview  # Vite preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Features
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Stage** (800×500): drag dancers, multi-select (Shift/Ctrl+Click), snap on drop. Zoom: `Ctrl/Cmd + scroll` or `Ctrl/Cmd + +/-/0`, pan by dragging empty area.
+- **Timeline**: formation blocks with duration/transition resize, note blocks. Zoom: `Shift + scroll` or `Shift + +/-`, pan: `Space + drag`, seek: click track. `Delete/Backspace` removes selected blocks.
+- **Audio**: `HTMLAudioElement` for playback; `wavesurfer.js` only renders the waveform. Syncs current formation to `currentTime`.
+- **Autosave**: debounced 800ms to `localStorage` (`danceform_autosave` + `danceform_project_name`) or to a user-picked file via File System Access API. Import validates via `src/utils/validateProject.ts`.
+- **Undo/Redo**: `Ctrl/Cmd+Z` / `Ctrl+Shift+Z` / `Ctrl+Y`, history cap 50 (`src/utils/undoHistory.ts`).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure
 
 ```
+src/
+  components/  # Stage, Timeline, Sidebar, DancerOnStage, etc. (SCSS Modules)
+  hooks/       # useDanceState, useAudio, useAutoSave, useUndoHistory, useStageInteraction, ...
+  utils/       # undoHistory, validateProject
+  types/       # Dancer, Formation, Note, Shape
+  test/setup.ts
+specs/         # approved specs (01-07)
+```
+
+All state lives in `src/hooks/useDanceState.ts` — every mutation goes through `commit(dancers, formations, notes)` or undo breaks. `App.tsx` memoizes `projectData` so `useAutoSave` can diff by reference.
+
+## TypeScript
+
+`verbatimModuleSyntax` (use `import type`), `erasableSyntaxOnly` (no enums), `noUnusedLocals/Parameters` on. `react-hooks` v6 rules enforced — don't suppress with `eslint-disable`.

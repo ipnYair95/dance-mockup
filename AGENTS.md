@@ -34,7 +34,6 @@ Vite + React 19 + TypeScript app ("DanceForm"): a choreography mockup editor for
 - `specs/` holds approved specs (e.g. `01-sidebar-edit-panel-fixed.md` … `07-vitest-unit-tests.md`) — review before large changes.
 
 ## Gotchas
-- `README.md` is the untouched Vite template — ignore it.
 - `StrictMode` is enabled; effects run twice on mount in dev.
 - Styling mixes SCSS Modules with CSS vars and some inline styles.
 - Stage zoom: Cmd/Ctrl+scroll or Cmd/Ctrl+=/-; timeline zoom: Shift+scroll or Shift+=/-. Space (with body focused) pans the timeline; Delete/Backspace deletes selected formations.
