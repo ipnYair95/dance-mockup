@@ -6,8 +6,8 @@
   align-items: center;
   padding: 4px 10px;
   font-size: 12px;
-  background: rgba(124, 58, 237, 0.22);
-  border: 1px solid rgba(124, 58, 237, 0.5);
+  background: #3A2F5C;
+  border: 1px solid #6D5AAD;
   border-radius: 4px;
   cursor: grab;
   white-space: nowrap;
@@ -17,11 +17,12 @@
   z-index: 1;
 
   &:hover {
-    background: rgba(124, 58, 237, 0.32);
+    background: #443672;
+    border-color: #7C6AC4;
   }
 
   &.isActive {
-    background: rgba(124, 58, 237, 0.4);
+    background: #4A3A80;
     border-color: #A78BFA;
     z-index: 2;
   }
