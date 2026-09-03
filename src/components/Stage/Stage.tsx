@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
+import { Lock, Unlock } from 'lucide-react';
 import type { Dancer, DancerPosition, Formation } from '../../types';
 import { DancerOnStage } from '../DancerOnStage/DancerOnStage';
 import { useStageZoom } from '../../hooks/useStageZoom';
@@ -35,6 +36,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
   const stageAreaRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const { zoom, zoomIn, zoomOut, resetZoom } = useStageZoom(stageAreaRef);
+  const [isLocked, setIsLocked] = useState(false);
 
   // ── Selection ────────────────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -56,6 +58,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
 
   // ── Pan pointer handlers ─────────────────────────────────────────────────────
   const handleAreaPointerDown = (e: React.PointerEvent) => {
+    if (isLocked) return;
     const target = e.target as HTMLElement;
     // If clicking on a dancer or a button/interactive element, don't pan
     if (target.closest('[data-dancer]') || target.closest('button') || target.closest('[data-zoom-controls]')) return;
@@ -161,7 +164,7 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
 
   return (
     <section
-      className={`${styles.stageArea} ${isPanning ? styles.panning : ''}`}
+      className={`${styles.stageArea} ${isPanning ? styles.panning : ''} ${isLocked ? styles.locked : ''}`}
       ref={stageAreaRef}
       onPointerDown={handleAreaPointerDown}
       onPointerMove={handleAreaPointerMove}
@@ -169,6 +172,16 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
     >
       {/* Zoom indicator + controls */}
       <div className={styles.zoomControls} data-zoom-controls>
+        <button
+          onClick={() => setIsLocked(v => !v)}
+          className={`${styles.zoomBtn} ${isLocked ? styles.activeLock : ''}`}
+          title={isLocked ? 'Desbloquear canvas' : 'Bloquear canvas'}
+          aria-label={isLocked ? 'Unlock canvas' : 'Lock canvas'}
+          aria-pressed={isLocked}
+        >
+          {isLocked ? <Lock size={14} /> : <Unlock size={14} />}
+        </button>
+        <span style={{ width: 1, height: 16, background: 'var(--border-color)', margin: '0 2px' }} />
         <button onClick={zoomOut} className={styles.zoomBtn}>−</button>
         <span onClick={resetZoom} title="Click to reset" className={styles.zoomPercent}>
           {zoomPercent}%

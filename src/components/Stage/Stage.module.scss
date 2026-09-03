@@ -9,6 +9,10 @@
   &.panning {
     cursor: grabbing;
   }
+
+  &.locked {
+    cursor: default;
+  }
 }
 
 .zoomControls {
@@ -33,10 +37,19 @@
   padding: 2px 6px;
   border-radius: 4px;
   transition: background-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background-color: var(--bg-hover);
   }
+}
+
+.activeLock {
+  background-color: rgba(124, 58, 237, 0.2);
+  color: var(--accent-primary);
+  border: 1px solid rgba(124, 58, 237, 0.4);
 }
 
 .zoomPercent {
