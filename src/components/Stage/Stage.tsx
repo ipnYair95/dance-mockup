@@ -39,6 +39,7 @@ interface StageProps {
 }
 
 export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpdateMultiplePositions, notes = [], currentTime = 0, isPlaying = false, onUpdateNotePosition, onUpdateNoteText }: StageProps) {
+  void isPlaying;
   const stageAreaRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const { zoom, zoomIn, zoomOut, resetZoom } = useStageZoom(stageAreaRef);
@@ -313,28 +314,26 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
             })}
           </div>
 
-          {/* Notas: posicionamiento libre dentro o fuera del canvas */}
+          {/* Notas: visibles solo cuando toca su intervalo en la timeline */}
           {notes.map(note => {
             const inRange = currentTime >= note.startTime && currentTime < note.startTime + note.duration;
-            const isVisible = isPlaying ? inRange : true;
-            const isDimmed = !inRange && !isPlaying;
             const isDragging = draggingNoteId === note.id;
+            const isVisible = inRange || isDragging;
             return (
-              <div key={note.id} style={{ opacity: isDimmed ? 0.45 : 1, pointerEvents: isVisible ? 'auto' : 'none' }}>
-                <NoteOnStage
-                  note={note}
-                  isVisible={isVisible}
-                  isSelected={selectedNoteId === note.id}
-                  isDragging={isDragging}
-                  dragOffset={isDragging ? noteDragOffset : { x: 0, y: 0 }}
-                  onPointerDown={(e) => handleNotePointerDown(e, note)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedNoteId(note.id);
-                  }}
-                  onTextChange={(text) => onUpdateNoteText?.(note.id, text)}
-                />
-              </div>
+              <NoteOnStage
+                key={note.id}
+                note={note}
+                isVisible={isVisible}
+                isSelected={selectedNoteId === note.id}
+                isDragging={isDragging}
+                dragOffset={isDragging ? noteDragOffset : { x: 0, y: 0 }}
+                onPointerDown={(e) => handleNotePointerDown(e, note)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedNoteId(note.id);
+                }}
+                onTextChange={(text) => onUpdateNoteText?.(note.id, text)}
+              />
             );
           })}
         </div>
