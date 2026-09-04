@@ -125,21 +125,23 @@ function App() {
     setAudioClearSignal(s => s + 1);
   };
 
-  // Sync timeline playback to formations
+  // Sync timeline playhead to formations (también en pausa/scrub)
   useEffect(() => {
-    if (audio.isPlaying) {
-      let timeSum = 0;
-      for (let i = 0; i < formations.length; i++) {
-        timeSum += formations[i].duration;
-        if (audio.currentTime < timeSum) {
-          if (currentFormationIndex !== i) {
-            setCurrentFormationIndex(i);
-          }
-          break;
+    let timeSum = 0;
+    for (let i = 0; i < formations.length; i++) {
+      timeSum += formations[i].duration;
+      if (audio.currentTime < timeSum) {
+        if (currentFormationIndex !== i) {
+          setCurrentFormationIndex(i);
         }
+        break;
       }
     }
-  }, [audio.currentTime, audio.isPlaying, formations, currentFormationIndex, setCurrentFormationIndex]);
+    // si currentTime está más allá del último bloque, fija al último
+    if (audio.currentTime >= timeSum && currentFormationIndex !== formations.length - 1) {
+      setCurrentFormationIndex(formations.length - 1);
+    }
+  }, [audio.currentTime, formations, currentFormationIndex, setCurrentFormationIndex]);
 
   return (
     <div className="app-container">
