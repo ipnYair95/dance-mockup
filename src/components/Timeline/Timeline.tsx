@@ -170,14 +170,33 @@ export function Timeline({
   }, [clearSignal]);
 
   const renderRuler = () => {
-    const ticks = [];
-    // cada 20s como en mock
-    const step = 20;
-    const num = Math.ceil(timelineDuration / step);
+    const ticks: React.ReactNode[] = [];
+    // Audacity-like: elige paso para que cada label ocupe ~90-140px
+    const candidates = [1, 2, 5, 10, 15, 20, 30, 60, 120, 300];
+    const targetPx = 110;
+    let major = 20;
+    for (const c of candidates) {
+      if (c * pixelsPerSecond >= targetPx) { major = c; break; }
+      major = c;
+    }
+    // si zoom muy bajo, asegura 60s mínimo
+    if (pixelsPerSecond <= 8) major = 60;
+    const minor = major >= 10 ? major / 5 : major >= 5 ? 1 : 0;
+    const num = Math.ceil(timelineDuration / major);
     for (let i = 0; i <= num; i++) {
-      const sec = i * step;
+      const sec = i * major;
       const mm = String(Math.floor(sec / 60)).padStart(2, '0');
       const ss = String(sec % 60).padStart(2, '0');
+      // sub-ticks intermedios (más tenues)
+      if (minor > 0 && i < num) {
+        for (let m = 1; m < major / minor; m++) {
+          const subSec = sec + m * minor;
+          if (subSec >= timelineDuration) break;
+          ticks.push(
+            <div key={`m-${subSec}`} className={styles.rulerTickMinor} style={{ left: `${subSec * pixelsPerSecond}px` }} />
+          );
+        }
+      }
       ticks.push(
         <div key={sec} className={styles.rulerTick} style={{ left: `${sec * pixelsPerSecond}px` }}>
           {mm}:{ss}
@@ -242,6 +261,9 @@ export function Timeline({
         onMouseLeave={handleTrackMouseUp}
       >
         <div className={styles.timelineContent} style={{ width: `${timelineDuration * pixelsPerSecond}px` }}>
+          <div className={styles.ruler}>
+            {renderRuler()}
+          </div>
 
           <div className={styles.audioTrack}>
             <div id="waveform" ref={waveformRef} style={{ width: `${(duration || timelineDuration) * pixelsPerSecond}px` }} />
@@ -299,9 +321,6 @@ export function Timeline({
             style={{ left: `${currentTime * pixelsPerSecond}px` }}
           >
             <span className={styles.playheadBadge}>{currentTime.toFixed(1)}</span>
-          </div>
-          <div className={styles.ruler}>
-            {renderRuler()}
           </div>
         </div>
       </div>

@@ -1,10 +1,10 @@
 .timeline {
-  height: 190px;
+  height: 240px;
   background-color: #0a0a0f;
   border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  padding: 10px 12px 14px;
+  padding: 10px 12px 12px;
 }
 
 .timelineControls {
@@ -133,8 +133,8 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow-x: auto;
-  overflow-y: hidden;
-  padding: 6px 0 8px;
+  overflow-y: visible;
+  padding: 6px 0 6px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 
@@ -156,15 +156,14 @@
 .timelineContent {
   position: relative;
   min-height: 100%;
-  padding-bottom: 14px;
+  padding-bottom: 4px;
 }
 
 .ruler {
-  height: 14px;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  height: 16px;
+  position: relative;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 4px;
   pointer-events: none;
 }
 
@@ -173,7 +172,19 @@
   top: 0;
   font-size: 9px;
   color: var(--text-muted);
-  opacity: 0.7;
+  opacity: 0.85;
+  border-left: 1px solid rgba(255,255,255,0.12);
+  padding-left: 3px;
+  height: 100%;
+}
+
+.rulerTickMinor {
+  position: absolute;
+  top: 8px;
+  width: 1px;
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
 }
 
 .audioTrack {
@@ -213,7 +224,7 @@
   position: relative;
   height: 28px;
   margin-top: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
   background: rgba(255,255,255,0.02);
   border: 1px dashed rgba(124, 58, 237, 0.18);
   border-radius: 4px;
