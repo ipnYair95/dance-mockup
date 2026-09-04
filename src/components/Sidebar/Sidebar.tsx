@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Check, X } from 'lucide-react';
 import type { Dancer, Shape } from '../../types';
 import styles from './Sidebar.module.scss';
 
@@ -21,6 +21,7 @@ const SHAPE_OPTIONS: { shape: Shape; label: string; Icon: React.FC<{ size: numbe
   { shape: 'circle', label: 'Circle', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" /></svg> },
   { shape: 'square', label: 'Square', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2" fill="currentColor" /></svg> },
   { shape: 'triangle', label: 'Triangle', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill="currentColor" /></svg> },
+  { shape: 'star', label: 'Star', Icon: ({ size }) => <svg width={size} height={size} viewBox="0 0 24 24"><polygon points="12,1.2 15.53,7.15 22.27,8.66 17.71,13.85 18.35,20.74 12,18 5.65,20.74 6.29,13.85 1.73,8.66 8.47,7.15" fill="currentColor" /></svg> },
 ];
 
 function DancerEditPanel({
@@ -161,6 +162,8 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
         return <svg width="14" height="14" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2" fill={dancer.color} /></svg>;
       case 'triangle':
         return <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill={dancer.color} /></svg>;
+      case 'star':
+        return <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="12,1.2 15.53,7.15 22.27,8.66 17.71,13.85 18.35,20.74 12,18 5.65,20.74 6.29,13.85 1.73,8.66 8.47,7.15" fill={dancer.color} /></svg>;
       default:
         return <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill={dancer.color} /></svg>;
     }
@@ -169,14 +172,12 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
-        <span>Performers</span>
-        <button className={styles.addDancerBtn} onClick={onAddDancer} title="Add Dancer">
-          <Plus size={18} />
-        </button>
+        <span className={styles.headerLabel}>Performers</span>
+        <span className={styles.headerCount}>{dancers.length}</span>
       </div>
 
       <div className={styles.dancersList}>
-        {dancers.map(dancer => (
+        {dancers.map((dancer, idx) => (
           <div
             key={dancer.id}
             className={styles.dancerRow}
@@ -185,12 +186,21 @@ export function Sidebar({ dancers, onAddDancer, onUpdateDancer, onDeleteDancer }
               className={`${styles.dancerItem} ${editingId === dancer.id ? styles.isActive : ''}`}
               onClick={() => setEditingId(editingId === dancer.id ? null : dancer.id)}
             >
-              <DancerShape dancer={dancer} />
-              <span style={{ flex: 1, marginLeft: '8px', fontSize: '13px' }}>{dancer.name}</span>
-              <Pencil size={13} style={{ opacity: 0.4, flexShrink: 0 }} />
+              <span className={styles.dancerDot} style={{ background: idx === 0 ? '#22d3ee' : 'var(--accent-primary)' }}>
+                {idx === 0 ? <span style={{ fontSize: 8 }}>★</span> : null}
+              </span>
+              <span className={styles.dancerName}>{dancer.name}</span>
+              <span className={styles.dancerShapeIcon}><DancerShape dancer={dancer} /></span>
             </div>
           </div>
         ))}
+      </div>
+
+      <div className={styles.sidebarFooter}>
+        <button className={styles.addDancerBtnFull} onClick={onAddDancer} title="Add Dancer" aria-label="Add Dancer">
+          <Plus size={12} /> Añadir performer
+        </button>
+        <span className={styles.dragHint}>Arrastra para reubicar</span>
       </div>
 
       {editingDancer && (

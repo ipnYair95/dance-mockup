@@ -16,7 +16,7 @@ vi.mock('../utils/undoHistory', () => mocks);
 
 import { useUndoHistory } from './useUndoHistory';
 
-const snapshot: Snapshot = { dancers: [], formations: [] };
+const snapshot: Snapshot = { dancers: [], formations: [], notes: [] };
 
 describe('useUndoHistory', () => {
   beforeEach(() => {

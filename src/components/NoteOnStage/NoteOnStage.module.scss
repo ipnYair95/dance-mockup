@@ -1,0 +1,70 @@
+.noteOnStage {
+  position: absolute;
+  z-index: 15;
+  background: #3A2F5C;
+  border: 1px solid #6D5AAD;
+  border-left: 3px solid #A78BFA;
+  border-radius: 8px;
+  padding: 6px 8px 6px 6px;
+  min-width: 140px;
+  max-width: 220px;
+  height: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  user-select: none;
+  touch-action: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+
+  &.isSelected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.4), 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  &.isDragging {
+    scale: 1.05;
+  }
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+
+  &:active {
+    cursor: grabbing;
+    background: var(--bg-active);
+  }
+}
+
+.noteInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: text;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+  min-height: 20px;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}

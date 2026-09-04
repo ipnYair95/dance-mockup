@@ -1,4 +1,4 @@
-export type Shape = 'circle' | 'square' | 'triangle';
+export type Shape = 'circle' | 'square' | 'triangle' | 'star';
 
 export interface Dancer {
   id: string;
@@ -19,4 +19,13 @@ export interface Formation {
   duration: number; // total duration in seconds
   transitionDuration: number; // transition time in seconds
   positions: DancerPosition[];
+}
+
+export interface Note {
+  id: string;
+  text: string;
+  startTime: number; // seconds on timeline
+  duration: number; // seconds
+  x: number;
+  y: number;
 }

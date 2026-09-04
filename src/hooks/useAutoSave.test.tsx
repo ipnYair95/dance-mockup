@@ -49,6 +49,7 @@ const data = (n: number) => ({
       positions: [],
     } as Formation,
   ],
+  notes: [],
 });
 
 const fileHandle = {

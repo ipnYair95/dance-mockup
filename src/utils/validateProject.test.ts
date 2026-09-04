@@ -23,7 +23,7 @@ const validFormations: Formation[] = [
 describe('validateProject', () => {
   it('returns the typed project for a valid payload', () => {
     const data = { dancers: validDancers, formations: validFormations };
-    expect(validateProject(data)).toEqual(data);
+    expect(validateProject(data)).toEqual({ ...data, notes: [] });
   });
 
   it('returns null for non-object input', () => {

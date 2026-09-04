@@ -1,7 +1,8 @@
-import { Plus, Play, Pause, SkipBack, Music, ZoomIn, ZoomOut } from 'lucide-react';
-import type { Formation } from '../../types';
+import { Plus, Play, Pause, SkipBack, StickyNote } from 'lucide-react';
+import type { Formation, Note } from '../../types';
 import { FormationBlock } from '../FormationBlock/FormationBlock';
-import { useRef, useEffect } from 'react';
+import { NoteBlock } from '../NoteBlock/NoteBlock';
+import { useRef, useEffect, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import styles from './Timeline.module.scss';
 import { useTimeline } from '../../hooks/useTimeline';
@@ -13,6 +14,12 @@ interface TimelineProps {
   onSelectFormation: (index: number) => void;
   onDurationChange: (index: number, newDuration: number) => void;
   onTransitionChange: (index: number, newTransition: number) => void;
+  notes: Note[];
+  onAddNote: (startTime?: number) => void;
+  onUpdateNoteDuration: (index: number, newDuration: number) => void;
+  onUpdateNoteStartTime: (index: number, newStart: number) => void;
+  onUpdateNoteText: (id: string, text: string) => void;
+  onDeleteNotes: (indices: number[]) => void;
 
   isPlaying: boolean;
   currentTime: number;
@@ -31,6 +38,12 @@ export function Timeline({
   onSelectFormation,
   onDurationChange,
   onTransitionChange,
+  notes,
+  onAddNote,
+  onUpdateNoteDuration,
+  onUpdateNoteStartTime,
+  onUpdateNoteText,
+  onDeleteNotes,
   isPlaying,
   currentTime,
   duration,
@@ -40,9 +53,11 @@ export function Timeline({
   onDeleteFormation,
   clearSignal = 0
 }: TimelineProps) {
-  // Total time needed for the timeline (either audio duration or sum of formations)
   const totalFormationsDuration = formations.reduce((acc, f) => acc + f.duration, 0);
-  const timelineDuration = Math.max(duration || 0, totalFormationsDuration, 60); // min 60s
+  const maxNoteEnd = notes.reduce((acc, n) => Math.max(acc, n.startTime + n.duration), 0);
+  const timelineDuration = Math.max(duration || 0, totalFormationsDuration, maxNoteEnd, 60);
+
+  const [selectedNoteIndices, setSelectedNoteIndices] = useState<Set<number>>(new Set());
 
   const {
     pixelsPerSecond,
@@ -66,6 +81,34 @@ export function Timeline({
     onDeleteFormation,
   });
 
+  // Delete seleccionado de notas (cuando no hay formación seleccionada o con foco en notas)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.code === 'Delete' || e.code === 'Backspace') && e.target === document.body) {
+        if (selectedNoteIndices.size > 0) {
+          e.preventDefault();
+          onDeleteNotes(Array.from(selectedNoteIndices));
+          setSelectedNoteIndices(new Set());
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedNoteIndices, onDeleteNotes]);
+
+  const selectNote = (index: number, e?: { shiftKey?: boolean; metaKey?: boolean; ctrlKey?: boolean }) => {
+    if (e?.shiftKey || e?.metaKey || e?.ctrlKey) {
+      setSelectedNoteIndices(prev => {
+        const next = new Set(prev);
+        if (next.has(index)) next.delete(index);
+        else next.add(index);
+        return next;
+      });
+    } else {
+      setSelectedNoteIndices(new Set([index]));
+    }
+  };
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
@@ -74,15 +117,16 @@ export function Timeline({
     if (waveformRef.current && !wavesurfer.current) {
       wavesurfer.current = WaveSurfer.create({
         container: waveformRef.current,
-        waveColor: '#7C3AED',
-        progressColor: '#6D28D9',
+        waveColor: '#A78BFA',
+        progressColor: '#22d3ee',
         height: 40,
         barWidth: 2,
+        barGap: 1,
         barRadius: 2,
         cursorWidth: 0,
         interact: false,
-        fillParent: true, // Always fill its container, never scroll internally
-        autoScroll: false, // Disable any internal auto-scroll behavior
+        fillParent: true,
+        autoScroll: false,
         autoCenter: false,
       });
     }
@@ -105,11 +149,9 @@ export function Timeline({
     }
   };
 
-  // Sync wavesurfer width and zoom
   useEffect(() => {
     if (wavesurfer.current) {
       try {
-        // wavesurfer might throw if no audio is loaded yet
         wavesurfer.current.zoom(pixelsPerSecond);
       } catch {
         console.warn("WaveSurfer zoom failed, audio might not be loaded yet.");
@@ -117,7 +159,6 @@ export function Timeline({
     }
   }, [pixelsPerSecond]);
 
-  // Clear the loaded audio wave when the app signals a project reset
   useEffect(() => {
     if (clearSignal > 0 && wavesurfer.current) {
       try {
@@ -128,14 +169,37 @@ export function Timeline({
     }
   }, [clearSignal]);
 
-  // Generate Ruler (Segundero) tick marks
   const renderRuler = () => {
-    const ticks = [];
-    const numTicks = Math.ceil(timelineDuration);
-    for (let i = 0; i <= numTicks; i++) {
+    const ticks: React.ReactNode[] = [];
+    // Audacity-like: elige paso para que cada label ocupe ~90-140px
+    const candidates = [1, 2, 5, 10, 15, 20, 30, 60, 120, 300];
+    const targetPx = 110;
+    let major = 20;
+    for (const c of candidates) {
+      if (c * pixelsPerSecond >= targetPx) { major = c; break; }
+      major = c;
+    }
+    // si zoom muy bajo, asegura 60s mínimo
+    if (pixelsPerSecond <= 8) major = 60;
+    const minor = major >= 10 ? major / 5 : major >= 5 ? 1 : 0;
+    const num = Math.ceil(timelineDuration / major);
+    for (let i = 0; i <= num; i++) {
+      const sec = i * major;
+      const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+      const ss = String(sec % 60).padStart(2, '0');
+      // sub-ticks intermedios (más tenues)
+      if (minor > 0 && i < num) {
+        for (let m = 1; m < major / minor; m++) {
+          const subSec = sec + m * minor;
+          if (subSec >= timelineDuration) break;
+          ticks.push(
+            <div key={`m-${subSec}`} className={styles.rulerTickMinor} style={{ left: `${subSec * pixelsPerSecond}px` }} />
+          );
+        }
+      }
       ticks.push(
-        <div key={i} className={styles.rulerTick} style={{ left: `${i * pixelsPerSecond}px` }}>
-          {i}s
+        <div key={sec} className={styles.rulerTick} style={{ left: `${sec * pixelsPerSecond}px` }}>
+          {mm}:{ss}
         </div>
       );
     }
@@ -146,24 +210,30 @@ export function Timeline({
     ? (isPanning ? styles.grabbing : styles.grab)
     : '';
 
+  const zoomPercent = Math.round((pixelsPerSecond / 40) * 100);
+
   return (
     <footer className={styles.timeline}>
       <div className={styles.timelineControls}>
-        <button className={styles.iconBtn} onClick={() => onSeek(0)} title="Jump to start"><SkipBack size={20} /></button>
-        <button className={styles.iconBtn} onClick={onTogglePlay} title={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+        <button className={styles.iconBtn} onClick={() => onSeek(0)} title="Jump to start"><SkipBack size={16} /></button>
+        <button className={isPlaying ? styles.pauseBtn : styles.playBtn} onClick={onTogglePlay} title={isPlaying ? 'Pause' : 'Play'}>
+          {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="white" style={{ marginLeft: 1 }} />}
         </button>
         <span className={styles.timeLabel}>
-          {formatTime(currentTime)}
+          {formatTime(currentTime)} <span className={styles.timeTotal}>/ {formatTime(duration || timelineDuration)}</span>
         </span>
 
         <div className={styles.actionBtns}>
-          <button className={styles.addFormationBtn} onClick={onAddFormation}>
-            <Plus size={16} /> New Formation
+          <button className={styles.addFormationBtn} onClick={onAddFormation} aria-label="New Formation">
+            <Plus size={10} /> Formación
           </button>
 
-          <button className={styles.addAudioBtn} onClick={() => fileInputRef.current?.click()}>
-            <Music size={16} /> Add Audio
+          <button className={styles.addFormationBtn} onClick={() => onAddNote(currentTime)} title="Añadir nota en el playhead" aria-label="Add Note">
+            <StickyNote size={10} /> Nota
+          </button>
+
+          <button className={styles.addAudioBtn} onClick={() => fileInputRef.current?.click()} aria-label="Add Audio">
+            <Plus size={10} /> Audio
           </button>
           <input
             type="file"
@@ -174,14 +244,10 @@ export function Timeline({
           />
         </div>
 
-        {/* Zoom Controls */}
         <div className={styles.zoomControls}>
-          <button className={styles.iconBtn} onClick={zoomOut} title="Zoom Out">
-            <ZoomOut size={18} />
-          </button>
-          <button className={styles.iconBtn} onClick={zoomIn} title="Zoom In">
-            <ZoomIn size={18} />
-          </button>
+          <button className={styles.iconBtn} onClick={zoomOut} title="Zoom Out">—</button>
+          <span className={styles.zoomLabel}>{zoomPercent}%</span>
+          <button className={styles.iconBtn} onClick={zoomIn} title="Zoom In">+</button>
         </div>
       </div>
 
@@ -195,13 +261,10 @@ export function Timeline({
         onMouseLeave={handleTrackMouseUp}
       >
         <div className={styles.timelineContent} style={{ width: `${timelineDuration * pixelsPerSecond}px` }}>
-
-          {/* Ruler (Segundero) */}
           <div className={styles.ruler}>
             {renderRuler()}
           </div>
 
-          {/* Audio Track */}
           <div className={styles.audioTrack}>
             <div id="waveform" ref={waveformRef} style={{ width: `${(duration || timelineDuration) * pixelsPerSecond}px` }} />
             {!duration && (
@@ -211,7 +274,6 @@ export function Timeline({
             )}
           </div>
 
-          {/* Formations Track */}
           <div className={styles.formationsTrack}>
             {formations.map((form, index) => (
               <FormationBlock
@@ -234,11 +296,32 @@ export function Timeline({
             ))}
           </div>
 
-          {/* Playhead indicator */}
+          {/* Notas: pista debajo de formaciones, bloques redimensionables */}
+          <div className={styles.notesTrack}>
+            {notes.map((note, index) => (
+              <NoteBlock
+                key={note.id}
+                note={note}
+                index={index}
+                isActive={selectedNoteIndices.has(index)}
+                pixelsPerSecond={pixelsPerSecond}
+                onSelect={(e) => selectNote(index, e)}
+                onDurationChange={(d) => onUpdateNoteDuration(index, d)}
+                onStartTimeChange={(s) => onUpdateNoteStartTime(index, s)}
+                onTextChange={(t) => onUpdateNoteText(note.id, t)}
+              />
+            ))}
+            {notes.length === 0 && (
+              <span className={styles.notesEmpty}>Notas — añade con “Add Note”</span>
+            )}
+          </div>
+
           <div
             className={styles.playhead}
             style={{ left: `${currentTime * pixelsPerSecond}px` }}
-          />
+          >
+            <span className={styles.playheadBadge}>{currentTime.toFixed(1)}</span>
+          </div>
         </div>
       </div>
     </footer>

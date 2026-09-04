@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Dancer, Formation, Shape } from '../types';
+import type { Dancer, Formation, Note, Shape } from '../types';
 import { useUndoHistory } from './useUndoHistory';
 
 export const STAGE_WIDTH = 800;
@@ -25,9 +25,12 @@ export const DEFAULT_FORMATIONS: Formation[] = [
   }
 ];
 
+export const DEFAULT_NOTES: Note[] = [];
+
 export const useDanceState = () => {
   const [dancers, setDancers] = useState<Dancer[]>(DEFAULT_DANCERS);
   const [formations, setFormations] = useState<Formation[]>(DEFAULT_FORMATIONS);
+  const [notes, setNotes] = useState<Note[]>(DEFAULT_NOTES);
   const [currentFormationIndex, setCurrentFormationIndex] = useState(0);
   const activeFormation = formations[currentFormationIndex];
 
@@ -35,15 +38,16 @@ export const useDanceState = () => {
 
   // Push initial snapshot once
   useEffect(() => {
-    history.push({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
+    history.push({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS, notes: DEFAULT_NOTES });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Helper: apply snapshot after undo/redo
-  const applySnapshot = (snap: { dancers: Dancer[]; formations: Formation[] } | null) => {
+  const applySnapshot = (snap: { dancers: Dancer[]; formations: Formation[]; notes: Note[] } | null) => {
     if (!snap) return;
     setDancers(snap.dancers);
     setFormations(snap.formations);
+    setNotes(snap.notes ?? []);
     setCurrentFormationIndex(i => Math.min(i, snap.formations.length - 1));
   };
 
@@ -65,14 +69,15 @@ export const useDanceState = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Helper: mutate both, then push to history
-  const commit = (newDancers: Dancer[], newFormations: Formation[]) => {
+  // Helper: mutate all, then push to history
+  const commit = (newDancers: Dancer[], newFormations: Formation[], newNotes: Note[]) => {
     setDancers(newDancers);
     setFormations(newFormations);
-    history.push({ dancers: newDancers, formations: newFormations });
+    setNotes(newNotes);
+    history.push({ dancers: newDancers, formations: newFormations, notes: newNotes });
   };
 
-  // ── Actions ─────────────────────────────────────────────────────────────────
+  // ── Dancer actions ──────────────────────────────────────────────────────────
 
   const addDancer = () => {
     const newId = Date.now().toString();
@@ -82,12 +87,12 @@ export const useDanceState = () => {
       ...form,
       positions: [...form.positions, { dancerId: newId, x: STAGE_WIDTH / 2, y: STAGE_HEIGHT / 2 }]
     }));
-    commit(newDancers, newFormations);
+    commit(newDancers, newFormations, notes);
   };
 
   const updateDancer = (id: string, updates: Partial<{ name: string; color: string; shape: Shape }>) => {
     const newDancers = dancers.map(d => d.id === id ? { ...d, ...updates } : d);
-    commit(newDancers, formations);
+    commit(newDancers, formations, notes);
   };
 
   const deleteDancer = (id: string) => {
@@ -96,7 +101,7 @@ export const useDanceState = () => {
       ...form,
       positions: form.positions.filter(p => p.dancerId !== id)
     }));
-    commit(newDancers, newFormations);
+    commit(newDancers, newFormations, notes);
   };
 
   const addFormation = () => {
@@ -109,14 +114,14 @@ export const useDanceState = () => {
       positions: [...activeFormation.positions]
     };
     const newFormations = [...formations, newFormation];
-    commit(dancers, newFormations);
+    commit(dancers, newFormations, notes);
     setCurrentFormationIndex(formations.length);
   };
 
   const deleteFormation = (indices: number[]) => {
     if (formations.length - indices.length < 1) return;
     const newFormations = formations.filter((_, i) => !indices.includes(i));
-    commit(dancers, newFormations);
+    commit(dancers, newFormations, notes);
     setCurrentFormationIndex(prev => Math.min(prev, newFormations.length - 1));
   };
 
@@ -127,7 +132,7 @@ export const useDanceState = () => {
     const newFormations = formations.map((f, i) =>
       i === currentFormationIndex ? { ...f, positions: newPositions } : f
     );
-    commit(dancers, newFormations);
+    commit(dancers, newFormations, notes);
   };
 
   // Multi-dancer position update (for multi-select drag)
@@ -139,7 +144,7 @@ export const useDanceState = () => {
     const newFormations = formations.map((f, i) =>
       i === currentFormationIndex ? { ...f, positions: updatedPositions } : f
     );
-    commit(dancers, newFormations);
+    commit(dancers, newFormations, notes);
   };
 
   const updateFormationDuration = (index: number, newDuration: number) => {
@@ -150,7 +155,7 @@ export const useDanceState = () => {
         transitionDuration: Math.min(f.transitionDuration, Math.max(1, newDuration))
       } : f
     );
-    commit(dancers, newFormations);
+    commit(dancers, newFormations, notes);
   };
 
   const updateTransitionDuration = (index: number, newTransition: number) => {
@@ -160,24 +165,70 @@ export const useDanceState = () => {
         transitionDuration: Math.min(f.duration, Math.max(0.1, newTransition))
       } : f
     );
-    commit(dancers, newFormations);
+    commit(dancers, newFormations, notes);
   };
 
-  const loadProject = (newDancers: Dancer[], newFormations: Formation[]) => {
-    commit(newDancers, newFormations);
+  // ── Note actions ────────────────────────────────────────────────────────────
+
+  const addNote = (startTime?: number) => {
+    const newNote: Note = {
+      id: `note-${Date.now()}`,
+      text: 'Nueva nota',
+      startTime: Math.max(0, startTime ?? 0),
+      duration: 3,
+      // posicion por defecto fuera del canvas (a la izquierda)
+      x: -140,
+      y: 20,
+    };
+    commit(dancers, formations, [...notes, newNote]);
+  };
+
+  const updateNote = (id: string, updates: Partial<Pick<Note, 'text' | 'startTime' | 'duration' | 'x' | 'y'>>) => {
+    const newNotes = notes.map(n => n.id === id ? { ...n, ...updates } : n);
+    commit(dancers, formations, newNotes);
+  };
+
+  const updateNotePosition = (id: string, x: number, y: number) => {
+    const newNotes = notes.map(n => n.id === id ? { ...n, x, y } : n);
+    commit(dancers, formations, newNotes);
+  };
+
+  const updateNoteDuration = (index: number, newDuration: number) => {
+    const newNotes = notes.map((n, i) =>
+      i === index ? { ...n, duration: Math.max(0.5, newDuration) } : n
+    );
+    commit(dancers, formations, newNotes);
+  };
+
+  const updateNoteStartTime = (index: number, newStart: number) => {
+    const newNotes = notes.map((n, i) =>
+      i === index ? { ...n, startTime: Math.max(0, newStart) } : n
+    );
+    commit(dancers, formations, newNotes);
+  };
+
+  const deleteNotes = (indices: number[]) => {
+    const newNotes = notes.filter((_, i) => !indices.includes(i));
+    commit(dancers, formations, newNotes);
+  };
+
+  const loadProject = (newDancers: Dancer[], newFormations: Formation[], newNotes: Note[] = []) => {
+    commit(newDancers, newFormations, newNotes);
     setCurrentFormationIndex(0);
   };
 
   const clearProject = () => {
     setDancers(DEFAULT_DANCERS);
     setFormations(DEFAULT_FORMATIONS);
+    setNotes(DEFAULT_NOTES);
     setCurrentFormationIndex(0);
-    history.reset({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS });
+    history.reset({ dancers: DEFAULT_DANCERS, formations: DEFAULT_FORMATIONS, notes: DEFAULT_NOTES });
   };
 
   return {
     dancers,
     formations,
+    notes,
     currentFormationIndex,
     activeFormation,
     addDancer,
@@ -190,6 +241,12 @@ export const useDanceState = () => {
     updateMultipleDancerPositions,
     updateFormationDuration,
     updateTransitionDuration,
+    addNote,
+    updateNote,
+    updateNotePosition,
+    updateNoteDuration,
+    updateNoteStartTime,
+    deleteNotes,
     loadProject,
     clearProject,
     canUndo: history.canUndo,

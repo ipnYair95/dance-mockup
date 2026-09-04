@@ -31,6 +31,7 @@ export function DancerOnStage({
     switch (d.shape) {
       case 'square':   return <rect width="30" height="30" fill={d.color} rx="2" />;
       case 'triangle': return <polygon points="15,0 30,30 0,30" fill={d.color} />;
+      case 'star':     return <polygon points="15,1.5 19.41,8.93 27.84,10.83 22.13,17.32 22.94,25.92 15,22.5 7.06,25.92 7.87,17.32 2.16,10.83 10.59,8.93" fill={d.color} />;
       default:         return <circle cx="15" cy="15" r="15" fill={d.color} />;
     }
   };
@@ -55,23 +56,28 @@ export function DancerOnStage({
           ? { duration: 0 }
           : { type: 'tween', duration: transitionDuration, ease: 'easeInOut' }
       }
+      style={{ color: dancer.color }}
     >
       <svg width="30" height="30" className={styles.shapeSvg}>
         {/* Selection ring */}
         {isSelected && (
           <circle
-            cx="15" cy="15" r="21"
+            cx="15" cy="15" r="20"
             fill="none"
             stroke="white"
-            strokeWidth="2"
-            strokeDasharray="5 3"
+            strokeWidth="1.5"
+            strokeDasharray="4 3"
             opacity="0.9"
           />
         )}
         {renderShape(dancer)}
-        <text x="15" y="-8" fill="white" fontSize="10" textAnchor="middle" className={styles.dancerLabel}>
-          {dancer.name}
-        </text>
+        {/* Label con fondo */}
+        <g transform="translate(15, 38)">
+          <rect x="-18" y="-7" width="36" height="12" className={styles.labelBg} />
+          <text textAnchor="middle" dy="2" className={styles.dancerLabel}>
+            {dancer.name}
+          </text>
+        </g>
       </svg>
     </motion.div>
   );
