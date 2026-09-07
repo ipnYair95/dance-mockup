@@ -6,19 +6,23 @@ interface FormationBlockProps {
   formation: Formation;
   index: number;
   isActive: boolean;
+  isSelected: boolean;
   pixelsPerSecond: number;
   onSelect: (e: React.MouseEvent) => void;
   onDurationChange: (newDuration: number) => void;
   onTransitionChange: (newTransition: number) => void;
+  onStartTimeChange?: (newStart: number) => void;
 }
 
 export function FormationBlock({
   formation,
   isActive,
+  isSelected,
   pixelsPerSecond,
   onSelect,
   onDurationChange,
-  onTransitionChange
+  onTransitionChange,
+  onStartTimeChange
 }: FormationBlockProps) {
   const {
     width,
@@ -33,11 +37,32 @@ export function FormationBlock({
     onTransitionChange,
   });
 
+  const left = (formation.startTime ?? 0) * pixelsPerSecond;
+
+  const handleMoveMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest(`.${styles.resizeHandle}`) || (e.target as HTMLElement).closest(`.${styles.transitionResizeHandle}`) || !onStartTimeChange) return;
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startStart = formation.startTime ?? 0;
+    const change = onStartTimeChange;
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX;
+      change(Math.max(0, startStart + dx / pixelsPerSecond));
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  };
+
   return (
     <div
-      className={`${styles.formationBlock} ${isActive ? styles.isActive : ''}`}
-      style={{ width: `${width}px` }}
+      className={`${styles.formationBlock} ${isSelected ? styles.isSelected : isActive ? styles.isActive : ''} ${isSelected ? styles.isSelectedBorder : ''}`}
+      style={{ left: `${left}px`, width: `${width}px` }}
       onClick={onSelect}
+      onMouseDown={handleMoveMouseDown}
     >
       <span className={styles.blockLabel}>{formation.name}</span>
 

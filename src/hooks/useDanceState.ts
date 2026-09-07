@@ -17,6 +17,7 @@ export const DEFAULT_FORMATIONS: Formation[] = [
     name: 'Formation 1',
     duration: 5,
     transitionDuration: 1,
+    startTime: 0,
     positions: [
       { dancerId: '1', x: STAGE_WIDTH / 2 - 50, y: STAGE_HEIGHT / 2 },
       { dancerId: '2', x: STAGE_WIDTH / 2,       y: STAGE_HEIGHT / 2 },
@@ -69,12 +70,24 @@ export const useDanceState = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Helper para migrar formaciones legacy sin startTime y ordenar por tiempo
+  const ensureStartTimes = (forms: Formation[]): Formation[] => {
+    let cursor = 0;
+    return forms.map(f => {
+      if (typeof f.startTime === 'number') return f;
+      const nf = { ...f, startTime: cursor };
+      cursor += f.duration;
+      return nf;
+    });
+  };
+
   // Helper: mutate all, then push to history
   const commit = (newDancers: Dancer[], newFormations: Formation[], newNotes: Note[]) => {
+    const normalized = ensureStartTimes(newFormations);
     setDancers(newDancers);
-    setFormations(newFormations);
+    setFormations(normalized);
     setNotes(newNotes);
-    history.push({ dancers: newDancers, formations: newFormations, notes: newNotes });
+    history.push({ dancers: newDancers, formations: normalized, notes: newNotes });
   };
 
   // ── Dancer actions ──────────────────────────────────────────────────────────
@@ -106,11 +119,13 @@ export const useDanceState = () => {
 
   const addFormation = () => {
     const newId = `form-${Date.now()}`;
+    const lastEnd = formations.reduce((m, f) => Math.max(m, (f.startTime ?? 0) + f.duration), 0);
     const newFormation: Formation = {
       id: newId,
       name: `Formation ${formations.length + 1}`,
       duration: 5,
       transitionDuration: 1,
+      startTime: lastEnd,
       positions: [...activeFormation.positions]
     };
     const newFormations = [...formations, newFormation];
@@ -168,6 +183,24 @@ export const useDanceState = () => {
     commit(dancers, newFormations, notes);
   };
 
+  const updateFormationStartTime = (index: number, newStart: number) => {
+    const clamped = Math.max(0, newStart);
+    const target = formations[index];
+    if (!target) return;
+    const dur = target.duration;
+    // no solape con ninguna otra formación
+    for (let i = 0; i < formations.length; i++) {
+      if (i === index) continue;
+      const f = formations[i];
+      const s = f.startTime ?? 0;
+      if (clamped < s + f.duration && clamped + dur > s) return; // solape → ignora
+    }
+    const newFormations = formations.map((f, i) =>
+      i === index ? { ...f, startTime: clamped } : f
+    );
+    commit(dancers, newFormations, notes);
+  };
+
   // ── Note actions ────────────────────────────────────────────────────────────
 
   const addNote = (startTime?: number) => {
@@ -213,7 +246,8 @@ export const useDanceState = () => {
   };
 
   const loadProject = (newDancers: Dancer[], newFormations: Formation[], newNotes: Note[] = []) => {
-    commit(newDancers, newFormations, newNotes);
+    const withTimes = ensureStartTimes(newFormations);
+    commit(newDancers, withTimes, newNotes);
     setCurrentFormationIndex(0);
   };
 
@@ -241,6 +275,7 @@ export const useDanceState = () => {
     updateMultipleDancerPositions,
     updateFormationDuration,
     updateTransitionDuration,
+    updateFormationStartTime,
     addNote,
     updateNote,
     updateNotePosition,

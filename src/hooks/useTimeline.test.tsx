@@ -45,7 +45,7 @@ describe('useTimeline', () => {
     it('starts with default zoom, selection and no panning', () => {
       const { result } = setup();
       expect(result.current.pixelsPerSecond).toBe(30);
-      expect(result.current.selectedIndices).toEqual(new Set([1]));
+      expect(result.current.selectedIndices).toEqual(new Set());
       expect(result.current.isSpacePressed).toBe(false);
       expect(result.current.isPanning).toBe(false);
     });
@@ -82,7 +82,7 @@ describe('useTimeline', () => {
       act(() => result.current.selectFormation(2));
       act(() => result.current.handleKeyDown(keyEvent({ code: 'Delete' })));
       expect(onDeleteFormation).toHaveBeenCalledWith([2]);
-      expect(result.current.selectedIndices).toEqual(new Set([0]));
+      expect(result.current.selectedIndices).toEqual(new Set());
     });
 
     it('does not delete when only one formation remains', () => {
@@ -146,9 +146,9 @@ describe('useTimeline', () => {
     it('toggles multi-selection with shift', () => {
       const { result } = setup();
       act(() => result.current.selectFormation(2, { shiftKey: true }));
-      expect(result.current.selectedIndices).toEqual(new Set([1, 2]));
+      expect(result.current.selectedIndices).toEqual(new Set([2]));
       act(() => result.current.selectFormation(2, { shiftKey: true }));
-      expect(result.current.selectedIndices).toEqual(new Set([1]));
+      expect(result.current.selectedIndices).toEqual(new Set());
     });
   });
 

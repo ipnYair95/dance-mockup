@@ -23,6 +23,7 @@ const isFormation = (value: unknown): value is Formation =>
   isString(value.name) &&
   isNumber(value.duration) &&
   isNumber(value.transitionDuration) &&
+  (value.startTime === undefined || isNumber(value.startTime as unknown)) &&
   Array.isArray(value.positions) &&
   value.positions.every(isDancerPosition);
 

@@ -3,10 +3,11 @@ import type { MouseEvent as ReactMouseEvent } from 'react';
 
 interface UseTimelineParams {
   formationsLength: number;
-  currentFormationIndex: number;
+  currentFormationIndex?: number;
   timelineDuration: number;
   onSeek: (t: number) => void;
   onDeleteFormation: (indices: number[]) => void;
+  hasNoteSelection?: boolean;
 }
 
 const MIN_ZOOM = 5;
@@ -14,13 +15,13 @@ const MAX_ZOOM = 150;
 
 export function useTimeline({
   formationsLength,
-  currentFormationIndex,
   timelineDuration,
   onSeek,
   onDeleteFormation,
+  hasNoteSelection = false,
 }: UseTimelineParams) {
   const [pixelsPerSecond, setPixelsPerSecond] = useState(30);
-  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(() => new Set([currentFormationIndex]));
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(() => new Set());
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
 
@@ -72,14 +73,16 @@ export function useTimeline({
       e.preventDefault();
       setIsSpacePressed(true);
     }
-    // Delete/Backspace for formation deletion
-    if ((e.code === 'Delete' || e.code === 'Backspace') && e.target === document.body) {
+    // Delete/Backspace for formation deletion (solo si hay selección explícita)
+    if ((e.code === 'Delete' || e.code === 'Backspace') && (e.target === document.body || (e.target as HTMLElement)?.closest?.('[data-timeline]'))) {
+      if (hasNoteSelection) return;
+      if (selectedIndices.size === 0) return;
       if (formationsLength > 1) {
         onDeleteFormation(Array.from(selectedIndices));
-        setSelectedIndices(new Set([Math.max(0, currentFormationIndex - 1)]));
+        setSelectedIndices(new Set());
       }
     }
-  }, [clampZoom, formationsLength, currentFormationIndex, onDeleteFormation, selectedIndices]);
+  }, [clampZoom, formationsLength, onDeleteFormation, selectedIndices, hasNoteSelection]);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     if (e.code === 'Space') {
@@ -149,6 +152,8 @@ export function useTimeline({
     }
   }, []);
 
+  const clearFormationSelection = useCallback(() => setSelectedIndices(new Set()), []);
+
   return {
     pixelsPerSecond,
     selectedIndices,
@@ -164,6 +169,7 @@ export function useTimeline({
     handleTrackMouseMove,
     handleTrackMouseUp,
     selectFormation,
+    clearFormationSelection,
     formatTime,
     timeFromClick,
   };

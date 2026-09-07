@@ -125,21 +125,29 @@ function App() {
     setAudioClearSignal(s => s + 1);
   };
 
-  // Sync timeline playhead to formations (también en pausa/scrub)
+  // Sync playhead a formaciones por intervalo [startTime, startTime+duration) con hold en gaps
   useEffect(() => {
-    let timeSum = 0;
+    let found = -1;
     for (let i = 0; i < formations.length; i++) {
-      timeSum += formations[i].duration;
-      if (audio.currentTime < timeSum) {
-        if (currentFormationIndex !== i) {
-          setCurrentFormationIndex(i);
-        }
+      const s = formations[i].startTime ?? 0;
+      if (audio.currentTime >= s && audio.currentTime < s + formations[i].duration) {
+        found = i;
         break;
       }
     }
-    // si currentTime está más allá del último bloque, fija al último
-    if (audio.currentTime >= timeSum && currentFormationIndex !== formations.length - 1) {
-      setCurrentFormationIndex(formations.length - 1);
+    if (found !== -1) {
+      if (currentFormationIndex !== found) setCurrentFormationIndex(found);
+    } else {
+      // en gap o fuera: mantiene última formación cuyo start <= time (hold)
+      let hold = -1;
+      for (let i = 0; i < formations.length; i++) {
+        if ((formations[i].startTime ?? 0) <= audio.currentTime) hold = i;
+      }
+      if (hold !== -1 && currentFormationIndex !== hold) {
+        setCurrentFormationIndex(hold);
+      } else if (hold === -1 && currentFormationIndex !== 0) {
+        setCurrentFormationIndex(0);
+      }
     }
   }, [audio.currentTime, formations, currentFormationIndex, setCurrentFormationIndex]);
 
@@ -253,15 +261,16 @@ function App() {
         />
       </main>
 
-      <Timeline
-        formations={danceState.formations}
-        currentFormationIndex={danceState.currentFormationIndex}
-        onAddFormation={danceState.addFormation}
-        onSelectFormation={danceState.setCurrentFormationIndex}
-        onDurationChange={danceState.updateFormationDuration}
-        onTransitionChange={danceState.updateTransitionDuration}
-        onDeleteFormation={danceState.deleteFormation}
-        notes={danceState.notes}
+        <Timeline
+          formations={danceState.formations}
+          currentFormationIndex={danceState.currentFormationIndex}
+          onAddFormation={danceState.addFormation}
+          onSelectFormation={danceState.setCurrentFormationIndex}
+          onDurationChange={danceState.updateFormationDuration}
+          onTransitionChange={danceState.updateTransitionDuration}
+          onUpdateFormationStartTime={danceState.updateFormationStartTime}
+          onDeleteFormation={danceState.deleteFormation}
+          notes={danceState.notes}
         onAddNote={(start) => danceState.addNote(start ?? audio.currentTime)}
         onUpdateNoteDuration={danceState.updateNoteDuration}
         onUpdateNoteStartTime={danceState.updateNoteStartTime}

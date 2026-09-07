@@ -18,6 +18,7 @@ export interface Formation {
   name: string;
   duration: number; // total duration in seconds
   transitionDuration: number; // transition time in seconds
+  startTime?: number; // seconds on timeline (libre, como Note) - opcional por compat
   positions: DancerPosition[];
 }
 

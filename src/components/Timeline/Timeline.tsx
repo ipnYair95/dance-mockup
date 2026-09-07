@@ -14,6 +14,7 @@ interface TimelineProps {
   onSelectFormation: (index: number) => void;
   onDurationChange: (index: number, newDuration: number) => void;
   onTransitionChange: (index: number, newTransition: number) => void;
+  onUpdateFormationStartTime?: (index: number, newStart: number) => void;
   notes: Note[];
   onAddNote: (startTime?: number) => void;
   onUpdateNoteDuration: (index: number, newDuration: number) => void;
@@ -38,6 +39,7 @@ export function Timeline({
   onSelectFormation,
   onDurationChange,
   onTransitionChange,
+  onUpdateFormationStartTime,
   notes,
   onAddNote,
   onUpdateNoteDuration,
@@ -53,9 +55,9 @@ export function Timeline({
   onDeleteFormation,
   clearSignal = 0
 }: TimelineProps) {
-  const totalFormationsDuration = formations.reduce((acc, f) => acc + f.duration, 0);
+  const maxFormationEnd = formations.reduce((m, f) => Math.max(m, (f.startTime ?? 0) + f.duration), 0);
   const maxNoteEnd = notes.reduce((acc, n) => Math.max(acc, n.startTime + n.duration), 0);
-  const timelineDuration = Math.max(duration || 0, totalFormationsDuration, maxNoteEnd, 60);
+  const timelineDuration = Math.max(duration || 0, maxFormationEnd, maxNoteEnd, 60);
 
   const [selectedNoteIndices, setSelectedNoteIndices] = useState<Set<number>>(new Set());
 
@@ -72,6 +74,7 @@ export function Timeline({
     handleTrackMouseMove,
     handleTrackMouseUp,
     selectFormation,
+    clearFormationSelection,
     formatTime,
   } = useTimeline({
     formationsLength: formations.length,
@@ -79,17 +82,18 @@ export function Timeline({
     timelineDuration,
     onSeek,
     onDeleteFormation,
+    hasNoteSelection: selectedNoteIndices.size > 0,
   });
 
-  // Delete seleccionado de notas (cuando no hay formación seleccionada o con foco en notas)
+  // Delete seleccionado de notas (exclusivo, solo timeline)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.code === 'Delete' || e.code === 'Backspace') && e.target === document.body) {
-        if (selectedNoteIndices.size > 0) {
-          e.preventDefault();
-          onDeleteNotes(Array.from(selectedNoteIndices));
-          setSelectedNoteIndices(new Set());
-        }
+      const target = e.target as HTMLElement;
+      const isInput = target && ['INPUT', 'TEXTAREA'].includes(target.tagName);
+      if ((e.code === 'Delete' || e.code === 'Backspace') && !isInput && selectedNoteIndices.size > 0) {
+        e.preventDefault();
+        onDeleteNotes(Array.from(selectedNoteIndices));
+        setSelectedNoteIndices(new Set());
       }
     };
     window.addEventListener('keydown', handler);
@@ -97,6 +101,8 @@ export function Timeline({
   }, [selectedNoteIndices, onDeleteNotes]);
 
   const selectNote = (index: number, e?: { shiftKey?: boolean; metaKey?: boolean; ctrlKey?: boolean }) => {
+    // exclusiva: seleccionar nota limpia formación
+    clearFormationSelection();
     if (e?.shiftKey || e?.metaKey || e?.ctrlKey) {
       setSelectedNoteIndices(prev => {
         const next = new Set(prev);
@@ -107,6 +113,12 @@ export function Timeline({
     } else {
       setSelectedNoteIndices(new Set([index]));
     }
+  };
+
+  const handleSelectFormation = (index: number, e: { shiftKey?: boolean; metaKey?: boolean; ctrlKey?: boolean }) => {
+    // exclusiva: seleccionar formación limpia notas
+    setSelectedNoteIndices(new Set());
+    selectFormation(index, e);
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -252,6 +264,7 @@ export function Timeline({
       </div>
 
       <div
+        data-timeline
         className={`${styles.timelineTrackContainer} ${trackCursorClass}`}
         ref={trackRef}
         onClick={handleTimelineClick}
@@ -280,18 +293,19 @@ export function Timeline({
                 key={form.id}
                 formation={form}
                 index={index}
-                isActive={selectedIndices.has(index) || index === currentFormationIndex}
+                isActive={index === currentFormationIndex}
+                isSelected={selectedIndices.has(index)}
                 pixelsPerSecond={pixelsPerSecond}
                 onSelect={(e) => {
-                  selectFormation(index, e);
+                  handleSelectFormation(index, e);
                   if (!(e.shiftKey || e.metaKey || e.ctrlKey)) {
                     onSelectFormation(index);
-                    const startTime = formations.slice(0, index).reduce((acc, f) => acc + f.duration, 0);
-                    onSeek(startTime);
+                    onSeek(form.startTime ?? 0);
                   }
                 }}
                 onDurationChange={(newDuration) => onDurationChange(index, newDuration)}
                 onTransitionChange={(newTransition) => onTransitionChange(index, newTransition)}
+                onStartTimeChange={(newStart) => onUpdateFormationStartTime?.(index, newStart)}
               />
             ))}
           </div>

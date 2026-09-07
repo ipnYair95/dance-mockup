@@ -206,6 +206,8 @@ export function Stage({ dancers, activeFormation, onUpdateDancerPosition, onUpda
     noteDragStartRef.current = null;
   }, [draggingNoteId, zoom, onUpdateNotePosition]);
 
+  // Borrado solo vía timeline (no desde stage) — se mantiene selección visual únicamente
+
   const zoomLabel = `×${zoom.toFixed(1)}`;
 
   return (

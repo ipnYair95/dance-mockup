@@ -4,13 +4,16 @@
   padding: 5px 12px;
   font-size: 11px;
   font-weight: 500;
-  cursor: pointer;
+  cursor: grab;
   white-space: nowrap;
   user-select: none;
   transition: background-color 0.2s, border-color 0.2s;
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
   overflow: hidden;
-  flex-shrink: 0;
   border-radius: 6px;
   color: var(--text-secondary);
 
@@ -21,10 +24,17 @@
 
   &.isActive {
     background-color: #252545;
+    border-color: rgba(255,255,255,0.4);
+    color: var(--text-secondary);
+    z-index: 1;
+  }
+
+  &.isSelected {
+    background-color: #252545;
     border-color: var(--accent-cyan);
     color: white;
     z-index: 2;
-    box-shadow: 0 0 0 1px rgba(34,211,238,0.2);
+    box-shadow: 0 0 0 1px rgba(34,211,238,0.3);
   }
 }
 

@@ -27,6 +27,7 @@ const customFormation: Formation = {
   name: 'Formation X',
   duration: 4,
   transitionDuration: 2,
+  startTime: 0,
   positions: [{ dancerId: 'x', x: 1, y: 2 }],
 };
 
